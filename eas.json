@@ -1,0 +1,55 @@
+{
+  "cli": {
+    "version": ">= 7.8.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "GCC_TREAT_WARNINGS_AS_ERRORS": "NO",
+        "CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS": "NO"
+      }
+    },
+    "production": {
+      "ios": {
+        "autoIncrement": true,
+        "credentialsSource": "remote",
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "autoIncrement": "versionCode"
+      },
+      "env": {
+        "GCC_TREAT_WARNINGS_AS_ERRORS": "NO",
+        "CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS": "NO",
+        "CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS_FLAG": "-Wno-deprecated-declarations",
+        "CLANG_ENABLE_OBJC_WEAK": "NO",
+        "CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF": "NO",
+        "CLANG_WARN_DEPRECATED_DECLARATIONS": "NO",
+        "GCC_WARN_DEPRECATED_DECLARATIONS": "NO",
+        "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES": "YES",
+        "ENABLE_STRICT_OBJC_MSGSEND": "NO"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "bishalaryal@reactiive.io",
+        "appleTeamId": "HG4G2ZMGV8"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account-key.json",
+        "track": "production"
+      }
+    }
+  }
+}

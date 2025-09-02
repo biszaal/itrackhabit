@@ -2,508 +2,464 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
-  TextInput,
-  Switch,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
-import { atomicHabitsService, EnvironmentDesign } from '../services/AtomicHabitsService';
+import { NeumorphCard } from './neumorphism/NeumorphCard';
+import { NeumorphButton } from './neumorphism/NeumorphButton';
+import { NeumorphInput } from './neumorphism/NeumorphInput';
 import { Habit } from '../types';
+
+interface FourLawsDesign {
+  law1_obvious: {
+    cues: string[];
+    environment: string;
+    implementation: string;
+    [key: string]: string[] | string;
+  };
+  law2_attractive: {
+    motivation: string;
+    rewards: string[];
+    temptationBundling: string;
+    [key: string]: string[] | string;
+  };
+  law3_easy: {
+    barriers: string[];
+    simplification: string;
+    twoMinuteRule: string;
+    [key: string]: string[] | string;
+  };
+  law4_satisfying: {
+    tracking: string;
+    celebration: string;
+    accountability: string;
+    [key: string]: string[] | string;
+  };
+}
 
 interface FourLawsDesignerProps {
   habit: Habit;
-  onSave?: (designData: any) => void;
-}
-
-interface LawDesign {
-  law1_obvious: {
-    implementationIntention: string;
-    visualCues: string[];
-    environmentDesign: string;
-  };
-  law2_attractive: {
-    bundledActivity: string;
-    socialElement: string;
-    reframing: string;
-  };
-  law3_easy: {
-    twoMinuteVersion: string;
-    scalingPlan: string[];
-    frictionReduction: string;
-  };
-  law4_satisfying: {
-    immediateReward: string;
-    habitTracker: boolean;
-    celebrationRitual: string;
-  };
+  onSave: (designData: FourLawsDesign) => void;
 }
 
 export const FourLawsDesigner: React.FC<FourLawsDesignerProps> = ({
   habit,
   onSave,
 }) => {
-  const [selectedLaw, setSelectedLaw] = useState<1 | 2 | 3 | 4>(1);
-  const [designData, setDesignData] = useState<LawDesign>({
+  const [currentLaw, setCurrentLaw] = useState(1);
+  const [designData, setDesignData] = useState<FourLawsDesign>({
     law1_obvious: {
-      implementationIntention: '',
-      visualCues: [''],
-      environmentDesign: '',
+      cues: [''],
+      environment: '',
+      implementation: '',
     },
     law2_attractive: {
-      bundledActivity: '',
-      socialElement: '',
-      reframing: '',
+      motivation: '',
+      rewards: [''],
+      temptationBundling: '',
     },
     law3_easy: {
-      twoMinuteVersion: '',
-      scalingPlan: [''],
-      frictionReduction: '',
+      barriers: [''],
+      simplification: '',
+      twoMinuteRule: '',
     },
     law4_satisfying: {
-      immediateReward: '',
-      habitTracker: true,
-      celebrationRitual: '',
+      tracking: '',
+      celebration: '',
+      accountability: '',
     },
   });
-
-  const [environmentDesigns, setEnvironmentDesigns] = useState<EnvironmentDesign[]>([]);
-
-  useEffect(() => {
-    loadExistingDesigns();
-    generateInitialSuggestions();
-  }, [habit]);
-
-  const loadExistingDesigns = async () => {
-    try {
-      const designs = await atomicHabitsService.designObviousCues(habit.id, 'home');
-      setEnvironmentDesigns(designs);
-    } catch (error) {
-      console.error('Error loading designs:', error);
-    }
-  };
-
-  const generateInitialSuggestions = () => {
-    // Generate 2-minute rule suggestion
-    const twoMinuteRule = atomicHabitsService.implementTwoMinuteRule(habit);
-    
-    // Generate attractiveness strategies
-    const attractivenessStrategies = atomicHabitsService.generateAttractivenessStrategies(habit);
-
-    setDesignData(prev => ({
-      ...prev,
-      law3_easy: {
-        ...prev.law3_easy,
-        twoMinuteVersion: twoMinuteRule.miniVersion,
-        scalingPlan: twoMinuteRule.scalingPlan,
-      },
-      law2_attractive: {
-        ...prev.law2_attractive,
-        bundledActivity: attractivenessStrategies[0] || '',
-        socialElement: attractivenessStrategies[1] || '',
-        reframing: attractivenessStrategies[2] || '',
-      },
-    }));
-  };
 
   const laws = [
     {
       number: 1,
-      title: 'Make It Obvious',
-      subtitle: 'Cue',
-      color: '#2196F3',
-      icon: 'eye' as const,
-      description: 'Design your environment to make good habits obvious and bad habits invisible.',
+      title: 'Make it Obvious',
+      subtitle: 'Design your environment for success',
+      icon: 'eye-outline',
+      color: '#3B82F6',
+      description: 'Create clear cues and triggers that prompt your habit',
     },
     {
       number: 2,
-      title: 'Make It Attractive',
-      subtitle: 'Craving',
-      color: '#E91E63',
-      icon: 'heart' as const,
-      description: 'Bundle your habits with activities you enjoy to make them more attractive.',
+      title: 'Make it Attractive',
+      subtitle: 'Increase your motivation and desire',
+      icon: 'heart-outline',
+      color: '#EF4444',
+      description: 'Bundle your habit with something you enjoy',
     },
     {
       number: 3,
-      title: 'Make It Easy',
-      subtitle: 'Response',
-      color: '#4CAF50',
-      icon: 'flash' as const,
-      description: 'Reduce friction and use the 2-minute rule to make habits as easy as possible.',
+      title: 'Make it Easy',
+      subtitle: 'Reduce friction and barriers',
+      icon: 'flash-outline',
+      color: '#10B981',
+      description: 'Simplify your habit to make it as easy as possible',
     },
     {
       number: 4,
-      title: 'Make It Satisfying',
-      subtitle: 'Reward',
-      color: '#FF9800',
-      icon: 'star' as const,
-      description: 'Add immediate rewards to make the experience satisfying and reinforce the behavior.',
+      title: 'Make it Satisfying',
+      subtitle: 'Create immediate rewards',
+      icon: 'star-outline',
+      color: '#F59E0B',
+      description: 'Celebrate wins and track your progress',
     },
   ];
 
-  const updateDesignData = (lawNumber: 1 | 2 | 3 | 4, field: string, value: any) => {
-    const lawKey = `law${lawNumber}_${laws[lawNumber - 1].subtitle.toLowerCase()}` as keyof LawDesign;
-    
+  const updateDesignData = (law: keyof FourLawsDesign, field: string, value: any) => {
     setDesignData(prev => ({
       ...prev,
-      [lawKey]: {
-        ...prev[lawKey],
+      [law]: {
+        ...prev[law],
         [field]: value,
       },
     }));
   };
 
-  const addArrayItem = (lawNumber: 1 | 2 | 3 | 4, field: string) => {
-    const lawKey = `law${lawNumber}_${laws[lawNumber - 1].subtitle.toLowerCase()}` as keyof LawDesign;
-    const currentData = designData[lawKey] as any;
-    
+  const addArrayItem = (law: keyof FourLawsDesign, field: string) => {
     setDesignData(prev => ({
       ...prev,
-      [lawKey]: {
-        ...prev[lawKey],
-        [field]: [...currentData[field], ''],
+      [law]: {
+        ...prev[law],
+        [field]: [...(prev[law][field] as string[]), ''],
       },
     }));
   };
 
-  const removeArrayItem = (lawNumber: 1 | 2 | 3 | 4, field: string, index: number) => {
-    const lawKey = `law${lawNumber}_${laws[lawNumber - 1].subtitle.toLowerCase()}` as keyof LawDesign;
-    const currentData = designData[lawKey] as any;
-    
-    setDesignData(prev => ({
-      ...prev,
-      [lawKey]: {
-        ...prev[lawKey],
-        [field]: currentData[field].filter((_: any, i: number) => i !== index),
-      },
-    }));
+  const updateArrayItem = (law: keyof FourLawsDesign, field: string, index: number, value: string) => {
+    setDesignData(prev => {
+      const array = [...(prev[law][field] as string[])];
+      array[index] = value;
+      return {
+        ...prev,
+        [law]: {
+          ...prev[law],
+          [field]: array,
+        },
+      };
+    });
   };
 
-  const updateArrayItem = (lawNumber: 1 | 2 | 3 | 4, field: string, index: number, value: string) => {
-    const lawKey = `law${lawNumber}_${laws[lawNumber - 1].subtitle.toLowerCase()}` as keyof LawDesign;
-    const currentData = designData[lawKey] as any;
-    const updated = [...currentData[field]];
-    updated[index] = value;
-    
-    setDesignData(prev => ({
-      ...prev,
-      [lawKey]: {
-        ...prev[lawKey],
-        [field]: updated,
-      },
-    }));
+  const removeArrayItem = (law: keyof FourLawsDesign, field: string, index: number) => {
+    setDesignData(prev => {
+      const array = (prev[law][field] as string[]).filter((_, i) => i !== index);
+      return {
+        ...prev,
+        [law]: {
+          ...prev[law],
+          [field]: array.length === 0 ? [''] : array,
+        },
+      };
+    });
   };
 
-  const renderLawTabs = () => (
-    <View style={styles.lawTabs}>
-      {laws.map((law) => (
-        <TouchableOpacity
-          key={law.number}
-          style={[
-            styles.lawTab,
-            selectedLaw === law.number && [styles.lawTabSelected, { borderBottomColor: law.color }],
-          ]}
-          onPress={() => setSelectedLaw(law.number as 1 | 2 | 3 | 4)}
-        >
-          <View style={[styles.lawTabIcon, { backgroundColor: law.color }]}>
-            <Ionicons name={law.icon} size={16} color="white" />
-          </View>
-          <Text style={[
-            styles.lawTabText,
-            selectedLaw === law.number && styles.lawTabTextSelected,
-          ]}>
-            {law.number}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  const renderLaw1Content = () => (
-    <View style={styles.lawContent}>
-      <Text style={styles.lawTitle}>Law 1: Make It Obvious</Text>
-      <Text style={styles.lawDescription}>
-        Design your environment to make the cue for your habit obvious.
-      </Text>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Implementation Intention</Text>
-        <Text style={styles.inputHint}>
-          "I will [HABIT] at [TIME] in [LOCATION]"
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder={`I will ${habit.title.toLowerCase()} at 7:00 AM in my bedroom`}
-          value={designData.law1_obvious.implementationIntention}
-          onChangeText={(text) => updateDesignData(1, 'implementationIntention', text)}
-          multiline
-        />
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Visual Cues</Text>
-        <Text style={styles.inputHint}>
-          What visual reminders will trigger this habit?
-        </Text>
-        {designData.law1_obvious.visualCues.map((cue, index) => (
-          <View key={index} style={styles.arrayInputRow}>
-            <TextInput
-              style={[styles.textInput, styles.arrayInput]}
-              placeholder={`Visual cue ${index + 1}`}
-              value={cue}
-              onChangeText={(text) => updateArrayItem(1, 'visualCues', index, text)}
+  const renderArrayInput = (
+    law: keyof FourLawsDesign,
+    field: string,
+    placeholder: string,
+    items: string[]
+  ) => (
+    <View style={styles.arrayInputContainer}>
+      {items.map((item, index) => (
+        <View key={index} style={styles.arrayInputRow}>
+          <View style={styles.arrayInputField}>
+            <NeumorphInput
+              value={item}
+              onChangeText={(value) => updateArrayItem(law, field, index, value)}
+              placeholder={placeholder}
+              multiline
+              style={styles.arrayInput}
             />
-            {designData.law1_obvious.visualCues.length > 1 && (
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeArrayItem(1, 'visualCues', index)}
-              >
-                <Ionicons name="close" size={16} color="#F44336" />
-              </TouchableOpacity>
-            )}
           </View>
-        ))}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => addArrayItem(1, 'visualCues')}
-        >
-          <Ionicons name="add" size={16} color="#2196F3" />
-          <Text style={styles.addButtonText}>Add Visual Cue</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Environment Design</Text>
-        <Text style={styles.inputHint}>
-          How will you restructure your environment?
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Place workout clothes beside my bed"
-          value={designData.law1_obvious.environmentDesign}
-          onChangeText={(text) => updateDesignData(1, 'environmentDesign', text)}
-          multiline
-        />
-      </View>
-    </View>
-  );
-
-  const renderLaw2Content = () => (
-    <View style={styles.lawContent}>
-      <Text style={styles.lawTitle}>Law 2: Make It Attractive</Text>
-      <Text style={styles.lawDescription}>
-        Bundle your habit with something you enjoy to create craving.
-      </Text>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Temptation Bundling</Text>
-        <Text style={styles.inputHint}>
-          Pair your habit with something you want to do
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="After I put on workout clothes, I will listen to my favorite podcast"
-          value={designData.law2_attractive.bundledActivity}
-          onChangeText={(text) => updateDesignData(2, 'bundledActivity', text)}
-          multiline
-        />
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Social Environment</Text>
-        <Text style={styles.inputHint}>
-          How will you make this habit social?
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Join a group where this behavior is normal"
-          value={designData.law2_attractive.socialElement}
-          onChangeText={(text) => updateDesignData(2, 'socialElement', text)}
-          multiline
-        />
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Reframing</Text>
-        <Text style={styles.inputHint}>
-          Change your mindset about the habit
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Instead of 'I have to exercise' think 'I get to build strength'"
-          value={designData.law2_attractive.reframing}
-          onChangeText={(text) => updateDesignData(2, 'reframing', text)}
-          multiline
-        />
-      </View>
-    </View>
-  );
-
-  const renderLaw3Content = () => (
-    <View style={styles.lawContent}>
-      <Text style={styles.lawTitle}>Law 3: Make It Easy</Text>
-      <Text style={styles.lawDescription}>
-        Reduce friction and use the 2-minute rule to make habits easy.
-      </Text>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>2-Minute Version</Text>
-        <Text style={styles.inputHint}>
-          What's the 2-minute version of this habit?
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Put on workout clothes"
-          value={designData.law3_easy.twoMinuteVersion}
-          onChangeText={(text) => updateDesignData(3, 'twoMinuteVersion', text)}
-        />
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Scaling Plan</Text>
-        <Text style={styles.inputHint}>
-          How will you gradually increase the habit?
-        </Text>
-        {designData.law3_easy.scalingPlan.map((step, index) => (
-          <View key={index} style={styles.arrayInputRow}>
-            <Text style={styles.stepNumber}>{index + 1}.</Text>
-            <TextInput
-              style={[styles.textInput, styles.arrayInput]}
-              placeholder={`Step ${index + 1}`}
-              value={step}
-              onChangeText={(text) => updateArrayItem(3, 'scalingPlan', index, text)}
-            />
-            {designData.law3_easy.scalingPlan.length > 1 && (
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeArrayItem(3, 'scalingPlan', index)}
-              >
-                <Ionicons name="close" size={16} color="#F44336" />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => addArrayItem(3, 'scalingPlan')}
-        >
-          <Ionicons name="add" size={16} color="#4CAF50" />
-          <Text style={styles.addButtonText}>Add Step</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Friction Reduction</Text>
-        <Text style={styles.inputHint}>
-          How will you remove obstacles?
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Prepare everything the night before"
-          value={designData.law3_easy.frictionReduction}
-          onChangeText={(text) => updateDesignData(3, 'frictionReduction', text)}
-          multiline
-        />
-      </View>
-    </View>
-  );
-
-  const renderLaw4Content = () => (
-    <View style={styles.lawContent}>
-      <Text style={styles.lawTitle}>Law 4: Make It Satisfying</Text>
-      <Text style={styles.lawDescription}>
-        Add immediate rewards to make the habit satisfying.
-      </Text>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Immediate Reward</Text>
-        <Text style={styles.inputHint}>
-          What small reward will you give yourself?
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Check off the habit and celebrate with a victory dance"
-          value={designData.law4_satisfying.immediateReward}
-          onChangeText={(text) => updateDesignData(4, 'immediateReward', text)}
-          multiline
-        />
-      </View>
-
-      <View style={styles.inputSection}>
-        <View style={styles.switchRow}>
-          <View>
-            <Text style={styles.inputLabel}>Habit Tracker</Text>
-            <Text style={styles.inputHint}>
-              Track this habit visually
-            </Text>
-          </View>
-          <Switch
-            value={designData.law4_satisfying.habitTracker}
-            onValueChange={(value) => updateDesignData(4, 'habitTracker', value)}
-            trackColor={{ false: '#767577', true: '#FF9800' }}
-            thumbColor={designData.law4_satisfying.habitTracker ? '#fff' : '#f4f3f4'}
-          />
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => removeArrayItem(law, field, index)}
+          >
+            <Ionicons name="close-circle" size={24} color={theme.colors.error} />
+          </TouchableOpacity>
         </View>
+      ))}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => addArrayItem(law, field)}
+      >
+        <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
+        <Text style={styles.addButtonText}>Add another</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderLaw1 = () => (
+    <ScrollView style={styles.lawContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.lawDescription}>
+        Create clear cues and triggers that will remind you to perform your habit.
+      </Text>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Visual Cues</Text>
+        <Text style={styles.fieldHint}>What will remind you to do this habit?</Text>
+        {renderArrayInput('law1_obvious', 'cues', 'e.g., Put workout clothes next to bed', designData.law1_obvious.cues)}
       </View>
 
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>Celebration Ritual</Text>
-        <Text style={styles.inputHint}>
-          How will you celebrate completing this habit?
-        </Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Say 'Yes!' and do a fist pump"
-          value={designData.law4_satisfying.celebrationRitual}
-          onChangeText={(text) => updateDesignData(4, 'celebrationRitual', text)}
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Environment Design</Text>
+        <Text style={styles.fieldHint}>How will you arrange your environment?</Text>
+        <NeumorphInput
+          value={designData.law1_obvious.environment}
+          onChangeText={(value) => updateDesignData('law1_obvious', 'environment', value)}
+          placeholder="Describe how you'll set up your space for success"
           multiline
+          numberOfLines={3}
         />
       </View>
-    </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Implementation Intention</Text>
+        <Text style={styles.fieldHint}>"I will [BEHAVIOR] at [TIME] in [LOCATION]"</Text>
+        <NeumorphInput
+          value={designData.law1_obvious.implementation}
+          onChangeText={(value) => updateDesignData('law1_obvious', 'implementation', value)}
+          placeholder="I will exercise at 7am in my living room"
+          multiline
+          numberOfLines={2}
+        />
+      </View>
+    </ScrollView>
+  );
+
+  const renderLaw2 = () => (
+    <ScrollView style={styles.lawContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.lawDescription}>
+        Make your habit appealing by connecting it to something you enjoy.
+      </Text>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Why This Matters</Text>
+        <Text style={styles.fieldHint}>Connect to your deeper motivation</Text>
+        <NeumorphInput
+          value={designData.law2_attractive.motivation}
+          onChangeText={(value) => updateDesignData('law2_attractive', 'motivation', value)}
+          placeholder="This habit will help me become the type of person who..."
+          multiline
+          numberOfLines={3}
+        />
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Immediate Rewards</Text>
+        <Text style={styles.fieldHint}>How will you celebrate small wins?</Text>
+        {renderArrayInput('law2_attractive', 'rewards', 'e.g., Listen to favorite podcast during workout', designData.law2_attractive.rewards)}
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Temptation Bundling</Text>
+        <Text style={styles.fieldHint}>Pair with something you want to do</Text>
+        <NeumorphInput
+          value={designData.law2_attractive.temptationBundling}
+          onChangeText={(value) => updateDesignData('law2_attractive', 'temptationBundling', value)}
+          placeholder="After I [HABIT], I will [TREAT]"
+          multiline
+          numberOfLines={2}
+        />
+      </View>
+    </ScrollView>
+  );
+
+  const renderLaw3 = () => (
+    <ScrollView style={styles.lawContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.lawDescription}>
+        Reduce friction and make your habit as easy as possible to start.
+      </Text>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Current Barriers</Text>
+        <Text style={styles.fieldHint}>What makes this habit difficult?</Text>
+        {renderArrayInput('law3_easy', 'barriers', 'e.g., Gym is far away', designData.law3_easy.barriers)}
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Simplification Strategy</Text>
+        <Text style={styles.fieldHint}>How can you make this easier?</Text>
+        <NeumorphInput
+          value={designData.law3_easy.simplification}
+          onChangeText={(value) => updateDesignData('law3_easy', 'simplification', value)}
+          placeholder="Prepare everything the night before"
+          multiline
+          numberOfLines={3}
+        />
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Two-Minute Rule</Text>
+        <Text style={styles.fieldHint}>What's the smallest version of this habit?</Text>
+        <NeumorphInput
+          value={designData.law3_easy.twoMinuteRule}
+          onChangeText={(value) => updateDesignData('law3_easy', 'twoMinuteRule', value)}
+          placeholder="Put on workout clothes"
+          multiline
+          numberOfLines={2}
+        />
+      </View>
+    </ScrollView>
+  );
+
+  const renderLaw4 = () => (
+    <ScrollView style={styles.lawContent} showsVerticalScrollIndicator={false}>
+      <Text style={styles.lawDescription}>
+        Create immediate satisfaction and track your progress.
+      </Text>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Progress Tracking</Text>
+        <Text style={styles.fieldHint}>How will you measure success?</Text>
+        <NeumorphInput
+          value={designData.law4_satisfying.tracking}
+          onChangeText={(value) => updateDesignData('law4_satisfying', 'tracking', value)}
+          placeholder="Mark calendar, use app, count repetitions"
+          multiline
+          numberOfLines={2}
+        />
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Immediate Celebration</Text>
+        <Text style={styles.fieldHint}>How will you celebrate right after?</Text>
+        <NeumorphInput
+          value={designData.law4_satisfying.celebration}
+          onChangeText={(value) => updateDesignData('law4_satisfying', 'celebration', value)}
+          placeholder="Fist pump, say 'Yes!', text a friend"
+          multiline
+          numberOfLines={2}
+        />
+      </View>
+
+      <View style={styles.fieldContainer}>
+        <Text style={styles.fieldLabel}>Accountability</Text>
+        <Text style={styles.fieldHint}>Who will help you stay consistent?</Text>
+        <NeumorphInput
+          value={designData.law4_satisfying.accountability}
+          onChangeText={(value) => updateDesignData('law4_satisfying', 'accountability', value)}
+          placeholder="Workout partner, family member, online community"
+          multiline
+          numberOfLines={2}
+        />
+      </View>
+    </ScrollView>
   );
 
   const renderLawContent = () => {
-    switch (selectedLaw) {
-      case 1:
-        return renderLaw1Content();
-      case 2:
-        return renderLaw2Content();
-      case 3:
-        return renderLaw3Content();
-      case 4:
-        return renderLaw4Content();
-      default:
-        return null;
+    switch (currentLaw) {
+      case 1: return renderLaw1();
+      case 2: return renderLaw2();
+      case 3: return renderLaw3();
+      case 4: return renderLaw4();
+      default: return null;
     }
   };
 
   const handleSave = () => {
-    if (onSave) {
-      onSave(designData);
+    // Validate that at least some fields are filled
+    const hasContent = Object.values(designData).some(law => {
+      return Object.values(law as Record<string, string | string[]>).some((field: string | string[]) =>
+        Array.isArray(field) ? field.some(item => item.trim()) : (field as string).trim()
+      );
+    });
+
+    if (!hasContent) {
+      Alert.alert('No Content', 'Please fill out at least some fields before saving.');
+      return;
     }
-    Alert.alert('Success', '4 Laws design saved successfully!');
+
+    onSave(designData);
   };
+
+  const currentLawData = laws[currentLaw - 1];
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>4 Laws of Behavior Change</Text>
-        <Text style={styles.headerSubtitle}>Design your habit: {habit.title}</Text>
+        <View style={styles.habitInfo}>
+          <Text style={styles.habitTitle}>{habit.title}</Text>
+          <Text style={styles.headerSubtitle}>Design your habit for success</Text>
+        </View>
       </View>
 
-      {renderLawTabs()}
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderLawContent()}
+      {/* Law Navigation */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.lawNavigation}>
+        {laws.map((law) => (
+          <TouchableOpacity
+            key={law.number}
+            style={[
+              styles.lawTab,
+              currentLaw === law.number && styles.lawTabActive,
+              { borderBottomColor: law.color }
+            ]}
+            onPress={() => setCurrentLaw(law.number)}
+          >
+            <Ionicons
+              name={law.icon as any}
+              size={20}
+              color={currentLaw === law.number ? law.color : theme.colors.textSecondary}
+            />
+            <Text style={[
+              styles.lawTabText,
+              currentLaw === law.number && { color: law.color }
+            ]}>
+              {law.number}. {law.title}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
+      {/* Current Law Header */}
+      <NeumorphCard style={styles.currentLawHeader}>
+        <View style={styles.currentLawInfo}>
+          <View style={[styles.lawIcon, { backgroundColor: `${currentLawData.color}15` }]}>
+            <Ionicons name={currentLawData.icon as any} size={24} color={currentLawData.color} />
+          </View>
+          <View style={styles.lawTitleContainer}>
+            <Text style={styles.currentLawTitle}>{currentLawData.title}</Text>
+            <Text style={styles.currentLawSubtitle}>{currentLawData.subtitle}</Text>
+          </View>
+        </View>
+      </NeumorphCard>
+
+      {/* Law Content */}
+      <View style={styles.contentContainer}>
+        {renderLawContent()}
+      </View>
+
+      {/* Navigation and Save */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save Design</Text>
-        </TouchableOpacity>
+        <View style={styles.navigationButtons}>
+          {currentLaw > 1 && (
+            <NeumorphButton
+              title="Previous"
+              variant="secondary"
+              onPress={() => setCurrentLaw(currentLaw - 1)}
+              style={styles.navButton}
+            />
+          )}
+          {currentLaw < 4 && (
+            <NeumorphButton
+              title="Next"
+              variant="primary"
+              onPress={() => setCurrentLaw(currentLaw + 1)}
+              style={styles.navButton}
+            />
+          )}
+        </View>
+        <NeumorphButton
+          title="Save Habit Design"
+          variant="primary"
+          onPress={handleSave}
+          style={styles.saveButton}
+        />
       </View>
     </View>
   );
@@ -520,145 +476,151 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderSoft,
   },
-  headerTitle: {
+  habitInfo: {
+    alignItems: 'center',
+  },
+  habitTitle: {
     fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: theme.fontSize.md,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
   },
-  lawTabs: {
-    flexDirection: 'row',
+  lawNavigation: {
     backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderSoft,
   },
   lawTab: {
-    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    minWidth: 120,
   },
-  lawTabSelected: {
+  lawTabActive: {
     borderBottomWidth: 2,
   },
-  lawTabIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  lawTabText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+    marginLeft: 6,
+    fontWeight: theme.fontWeight.medium,
+  },
+  currentLawHeader: {
+    margin: theme.spacing.md,
+    padding: theme.spacing.md,
+  },
+  currentLawInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  lawIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.xs,
+    marginRight: theme.spacing.md,
   },
-  lawTabText: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.medium,
-    color: theme.colors.textSecondary,
-  },
-  lawTabTextSelected: {
-    color: theme.colors.text,
-  },
-  scrollView: {
+  lawTitleContainer: {
     flex: 1,
   },
-  lawContent: {
-    padding: theme.spacing.lg,
-  },
-  lawTitle: {
+  currentLawTitle: {
     fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    marginBottom: 2,
+  },
+  currentLawSubtitle: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  lawContent: {
+    flex: 1,
+    padding: theme.spacing.md,
   },
   lawDescription: {
-    fontSize: theme.fontSize.md,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
     lineHeight: 20,
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
-  inputSection: {
-    marginBottom: theme.spacing.xl,
+  fieldContainer: {
+    marginBottom: theme.spacing.lg,
   },
-  inputLabel: {
+  fieldLabel: {
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
-  inputHint: {
-    fontSize: theme.fontSize.sm,
+  fieldHint: {
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     fontStyle: 'italic',
   },
-  textInput: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    backgroundColor: theme.colors.surface,
-    minHeight: 44,
+  arrayInputContainer: {
+    gap: theme.spacing.sm,
   },
   arrayInputRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    alignItems: 'flex-start',
+    gap: theme.spacing.sm,
   },
-  arrayInput: {
+  arrayInputField: {
     flex: 1,
   },
-  stepNumber: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.medium,
-    color: theme.colors.textSecondary,
-    marginRight: theme.spacing.sm,
-    minWidth: 20,
+  arrayInput: {
+    minHeight: 44,
   },
   removeButton: {
-    padding: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
+    marginTop: 8,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderStyle: 'dashed',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
-    marginTop: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.borderSoft,
+    borderStyle: 'dashed',
+    marginTop: theme.spacing.xs,
   },
   addButtonText: {
     fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginLeft: theme.spacing.xs,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    color: theme.colors.primary,
+    marginLeft: 6,
+    fontWeight: theme.fontWeight.medium,
   },
   footer: {
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.borderSoft,
   },
-  saveButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.full,
-    alignItems: 'center',
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.md,
   },
-  saveButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.semibold,
+  navButton: {
+    flex: 0.48,
+  },
+  saveButton: {
+    width: '100%',
   },
 });

@@ -4,15 +4,20 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../theme';
-import { CompoundProgress } from '../services/AtomicHabitsService';
+import { NeumorphCard } from './neumorphism/NeumorphCard';
+import { CompoundProgress } from '../services/habits';
+
+const { width } = Dimensions.get('window');
 
 interface CompoundProgressCardProps {
   progress: CompoundProgress;
   title: string;
-  onViewDetails?: () => void;
+  onViewDetails: () => void;
 }
 
 export const CompoundProgressCard: React.FC<CompoundProgressCardProps> = ({
@@ -20,235 +25,312 @@ export const CompoundProgressCard: React.FC<CompoundProgressCardProps> = ({
   title,
   onViewDetails,
 }) => {
+  const getImprovementColor = (rate: number) => {
+    if (rate >= 0.02) return '#10B981'; // Green for great improvement (2%+)
+    if (rate >= 0.01) return '#F59E0B'; // Amber for good improvement (1-2%)
+    if (rate >= 0) return '#6B7280'; // Gray for minimal improvement
+    return '#EF4444'; // Red for decline
+  };
+
   const getImprovementIcon = (rate: number) => {
-    if (rate >= 2) return { name: 'rocket', color: '#4CAF50' };
-    if (rate >= 1) return { name: 'trending-up', color: '#2196F3' };
-    if (rate >= 0.5) return { name: 'arrow-up', color: '#FF9800' };
-    return { name: 'remove', color: '#9E9E9E' };
+    if (rate >= 0.01) return 'trending-up';
+    if (rate >= 0) return 'remove';
+    return 'trending-down';
+  };
+
+  const formatPercentage = (value: number) => {
+    return `${(value * 100).toFixed(1)}%`;
   };
 
   const formatValue = (value: number) => {
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}k`;
-    }
-    return value.toFixed(0);
+    return value % 1 === 0 ? value.toString() : value.toFixed(1);
   };
 
-  const icon = getImprovementIcon(progress.improvementRate);
-  const growthPercentage = progress.compoundedGrowth;
-  const projectedGrowth = progress.projectedValue > progress.currentValue 
-    ? ((progress.projectedValue - progress.currentValue) / progress.currentValue * 100)
-    : 0;
+  const formatProjectionDays = () => {
+    // Show projection for 30 days ahead
+    return 30;
+  };
+
+  const improvementColor = getImprovementColor(progress.improvementRate);
+  const improvementIcon = getImprovementIcon(progress.improvementRate);
+  const projectionDays = formatProjectionDays();
+  
+  // Calculate future projection
+  const futureProjection = progress.currentValue * Math.pow(1 + progress.improvementRate, projectionDays);
 
   return (
-    <View style={styles.container}>
+    <NeumorphCard style={styles.card} onPress={onViewDetails}>
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={styles.title} numberOfLines={2}>
             {title}
           </Text>
-          <View style={styles.daysContainer}>
-            <Text style={styles.daysText}>
-              {progress.daysSinceStart} days
-            </Text>
+          <Text style={styles.subtitle}>
+            {progress.daysSinceStart} day{progress.daysSinceStart !== 1 ? 's' : ''} of progress
+          </Text>
+        </View>
+        
+        <View style={[styles.improvementBadge, { backgroundColor: `${improvementColor}15` }]}>
+          <Ionicons name={improvementIcon as any} size={16} color={improvementColor} />
+          <Text style={[styles.improvementText, { color: improvementColor }]}>
+            {formatPercentage(progress.improvementRate)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Progress Stats */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Started</Text>
+          <Text style={styles.statValue}>{formatValue(progress.baselineValue)}</Text>
+        </View>
+        
+        <View style={styles.statDivider} />
+        
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Current</Text>
+          <Text style={styles.statValue}>{formatValue(progress.currentValue)}</Text>
+        </View>
+        
+        <View style={styles.statDivider} />
+        
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Total Growth</Text>
+          <Text style={[styles.statValue, { color: improvementColor }]}>
+            {formatPercentage(progress.compoundedGrowth)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Compound Growth Visualization */}
+      <View style={styles.growthContainer}>
+        <Text style={styles.growthLabel}>Compound Growth Trajectory</Text>
+        
+        <View style={styles.progressBarContainer}>
+          <View style={styles.progressBar}>
+            <View style={styles.progressTrack} />
+            <LinearGradient
+              colors={[improvementColor, `${improvementColor}80`]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[
+                styles.progressFill,
+                {
+                  width: `${Math.min(Math.max((progress.compoundedGrowth * 100), 2), 100)}%`,
+                }
+              ]}
+            />
           </View>
         </View>
         
-        <TouchableOpacity 
-          style={styles.iconContainer}
-          onPress={onViewDetails}
-        >
-          <Ionicons 
-            name={icon.name as any} 
-            size={20} 
-            color={icon.color} 
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.progressContainer}>
-        <View style={styles.currentSection}>
-          <Text style={styles.label}>Current</Text>
-          <Text style={styles.currentValue}>
-            {formatValue(progress.currentValue)}
-          </Text>
-        </View>
-
-        <View style={styles.arrowContainer}>
-          <Ionicons 
-            name="arrow-forward" 
-            size={16} 
-            color={theme.colors.textSecondary} 
-          />
-        </View>
-
-        <View style={styles.projectedSection}>
-          <Text style={styles.label}>30-day projection</Text>
-          <Text style={styles.projectedValue}>
-            {formatValue(progress.projectedValue)}
+        <View style={styles.growthLabels}>
+          <Text style={styles.growthStartLabel}>Start</Text>
+          <Text style={[styles.growthEndLabel, { color: improvementColor }]}>
+            +{formatPercentage(progress.compoundedGrowth)}
           </Text>
         </View>
       </View>
 
-      <View style={styles.improvementSection}>
-        <View style={styles.improvementMetric}>
-          <Text style={styles.metricLabel}>Daily Improvement</Text>
-          <Text style={[styles.metricValue, { color: icon.color }]}>
-            +{progress.improvementRate.toFixed(1)}%
+      {/* Future Projection */}
+      <View style={styles.projectionContainer}>
+        <View style={styles.projectionHeader}>
+          <Ionicons name="telescope-outline" size={16} color={theme.colors.primary} />
+          <Text style={styles.projectionLabel}>30-Day Projection</Text>
+        </View>
+        
+        <View style={styles.projectionContent}>
+          <Text style={styles.projectionValue}>
+            {formatValue(futureProjection)}
+          </Text>
+          <Text style={styles.projectionGrowth}>
+            +{formatPercentage((futureProjection - progress.currentValue) / progress.currentValue)}
           </Text>
         </View>
-
-        <View style={styles.improvementMetric}>
-          <Text style={styles.metricLabel}>Total Growth</Text>
-          <Text style={[styles.metricValue, { color: growthPercentage >= 0 ? '#4CAF50' : '#F44336' }]}>
-            {growthPercentage >= 0 ? '+' : ''}{growthPercentage.toFixed(1)}%
-          </Text>
-        </View>
+        
+        <Text style={styles.projectionNote}>
+          If you maintain current improvement rate
+        </Text>
       </View>
 
-      {progress.improvementRate >= 1 && (
-        <View style={styles.insightContainer}>
-          <View style={styles.insightIcon}>
-            <Ionicons name="bulb" size={14} color="#FFB300" />
-          </View>
-          <Text style={styles.insightText}>
-            Great momentum! Your {progress.improvementRate.toFixed(1)}% daily improvement compounds to amazing results.
-          </Text>
-        </View>
-      )}
-
-      {progress.improvementRate < 0.5 && progress.daysSinceStart >= 7 && (
-        <View style={[styles.insightContainer, styles.warningContainer]}>
-          <View style={styles.insightIcon}>
-            <Ionicons name="warning" size={14} color="#FF6B7A" />
-          </View>
-          <Text style={[styles.insightText, styles.warningText]}>
-            Focus on just 1% better each day. Small improvements compound over time!
-          </Text>
-        </View>
-      )}
-    </View>
+      {/* Action Button */}
+      <TouchableOpacity style={styles.detailsButton} onPress={onViewDetails}>
+        <Text style={styles.detailsButtonText}>View Details</Text>
+        <Ionicons name="chevron-forward" size={16} color={theme.colors.primary} />
+      </TouchableOpacity>
+    </NeumorphCard>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
+  card: {
+    marginHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    padding: theme.spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.lg,
   },
   titleContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginRight: theme.spacing.md,
   },
   title: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.semibold,
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
-    flex: 1,
+    marginBottom: 4,
   },
-  daysContainer: {
-    backgroundColor: theme.colors.primaryLight,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    marginLeft: theme.spacing.sm,
-  },
-  daysText: {
+  subtitle: {
     fontSize: theme.fontSize.xs,
-    color: theme.colors.primary,
-    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.textSecondary,
   },
-  iconContainer: {
-    padding: theme.spacing.xs,
+  improvementBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
+    gap: 4,
   },
-  progressContainer: {
+  improvementText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.semibold,
+  },
+  statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
   },
-  currentSection: {
+  statItem: {
     flex: 1,
+    alignItems: 'center',
   },
-  projectedSection: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  arrowContainer: {
-    marginHorizontal: theme.spacing.md,
-  },
-  label: {
+  statLabel: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
     textTransform: 'uppercase',
     fontWeight: theme.fontWeight.medium,
   },
-  currentValue: {
+  statValue: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.text,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: theme.colors.borderSoft,
+    marginHorizontal: theme.spacing.sm,
+  },
+  growthContainer: {
+    marginBottom: theme.spacing.lg,
+  },
+  growthLabel: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+  progressBarContainer: {
+    marginBottom: theme.spacing.xs,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    position: 'relative',
+  },
+  progressTrack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: theme.colors.borderSoft,
+    borderRadius: 4,
+  },
+  progressFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    borderRadius: 4,
+    minWidth: 2,
+  },
+  growthLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  growthStartLabel: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+  },
+  growthEndLabel: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.semibold,
+  },
+  projectionContainer: {
+    backgroundColor: `${theme.colors.primary}08`,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: `${theme.colors.primary}20`,
+  },
+  projectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+    gap: 6,
+  },
+  projectionLabel: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.primary,
+  },
+  projectionContent: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 4,
+    gap: theme.spacing.sm,
+  },
+  projectionValue: {
     fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
   },
-  projectedValue: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.bold,
+  projectionGrowth: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.primary,
   },
-  improvementSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderSoft,
-  },
-  improvementMetric: {
-    alignItems: 'center',
-  },
-  metricLabel: {
+  projectionNote: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    fontWeight: theme.fontWeight.medium,
+    fontStyle: 'italic',
   },
-  metricValue: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-  },
-  insightContainer: {
+  detailsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: theme.spacing.md,
-    padding: theme.spacing.sm,
-    backgroundColor: '#FFF8E1',
-    borderRadius: theme.borderRadius.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: '#FFB300',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: `${theme.colors.primary}15`,
+    borderWidth: 1,
+    borderColor: `${theme.colors.primary}30`,
+    gap: 6,
   },
-  warningContainer: {
-    backgroundColor: '#FFEBEE',
-    borderLeftColor: '#FF6B7A',
-  },
-  insightIcon: {
-    marginRight: theme.spacing.sm,
-  },
-  insightText: {
-    flex: 1,
+  detailsButtonText: {
     fontSize: theme.fontSize.sm,
-    color: '#F57F17',
     fontWeight: theme.fontWeight.medium,
-  },
-  warningText: {
-    color: '#C62828',
+    color: theme.colors.primary,
   },
 });

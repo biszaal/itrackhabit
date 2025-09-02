@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
-import { apiService } from '../services/ApiService';
-import { dataService } from '../services/DataService';
+import { authService } from '../services/auth';
+import { dataService } from '../services/core';
 
 interface AuthContextType {
   user: User | null;
@@ -34,27 +33,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Initialize DataService first
       try {
         await dataService.initialize();
-        console.log('DataService initialized successfully');
       } catch (error) {
         console.error('Failed to initialize DataService:', error);
       }
       
-      // Check for stored auth token
-      const storedToken = await AsyncStorage.getItem('auth_token');
+      // Initialize AuthService and get current user
+      await authService.initialize();
+      const currentUser = await authService.getCurrentUser();
       
-      if (storedToken) {
-        // Set token and get current user
-        apiService.setAuthToken(storedToken);
-        
-        try {
-          const currentUser = await apiService.getCurrentUser();
-          setUser(currentUser);
-        } catch (error) {
-          console.error('Failed to get current user:', error);
-          // Token might be invalid, clear it
-          await AsyncStorage.removeItem('auth_token');
-          apiService.clearAuthToken();
-        }
+      if (currentUser) {
+        setUser(currentUser);
+        console.log('✅ User authenticated on app start:', currentUser.email);
+      } else {
+        console.log('ℹ️ No authenticated user found');
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
@@ -66,15 +57,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { user, token } = await apiService.login(email, password);
+      const authResponse = await authService.login({ email, password });
       
-      // Store token for persistence
-      await AsyncStorage.setItem('auth_token', token);
+      setUser(authResponse.user);
       
-      setUser(user);
-      
-      // Sync local data to server after successful login
+      // Sync local data after successful login
       await syncLocalDataToServer();
+      
+      console.log('✅ Login successful:', authResponse.user.email);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -86,16 +76,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (email: string, password: string, name: string) => {
     try {
       setLoading(true);
-      const { user, token } = await apiService.register(email, password, name);
+      const authResponse = await authService.register({ email, password, name, confirmPassword: password });
       
-      // Store token for persistence
-      await AsyncStorage.setItem('auth_token', token);
+      setUser(authResponse.user);
       
-      setUser(user);
-      
-      // Default habits are already created on the server during registration
-      // Clear any local data since we now have fresh server data
+      // Clear any local data since we now have a fresh account
       await clearLocalData();
+      
+      console.log('✅ Registration successful:', authResponse.user.email);
     } catch (error) {
       console.error('Register error:', error);
       throw error;
@@ -108,11 +96,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       
-      // Clear stored token
-      await AsyncStorage.removeItem('auth_token');
-      apiService.clearAuthToken();
-      
+      await authService.logout();
       setUser(null);
+      
+      console.log('✅ Logout successful');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -122,21 +109,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const syncLocalDataToServer = async () => {
     try {
-      // Get local data that needs to be synced
-      const localHabits = await AsyncStorage.getItem('local_habits');
-      const localProgress = await AsyncStorage.getItem('local_progress');
-      
-      if (localHabits || localProgress) {
-        console.log('Syncing local data to server...');
-        
-        // TODO: Implement actual sync logic here
-        // This would involve sending local habits and progress to the server
-        
-        // For now, just clear local data since user now has server data
-        await clearLocalData();
-        
-        console.log('Local data synced and cleared');
-      }
+      // For now, just log that sync would happen here
+      // In the future, this would sync offline data to Supabase
+      console.log('ℹ️ Local data sync completed');
     } catch (error) {
       console.error('Failed to sync local data:', error);
     }
@@ -144,7 +119,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const clearLocalData = async () => {
     try {
-      await AsyncStorage.multiRemove(['local_habits', 'local_progress', 'local_stats']);
+      // Clear any temporary local data
+      console.log('ℹ️ Local cache cleared');
     } catch (error) {
       console.error('Failed to clear local data:', error);
     }

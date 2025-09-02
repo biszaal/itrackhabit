@@ -10,20 +10,25 @@ import { RootStackParamList, MainTabParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
 // Screens - using the dynamic BasicHomeScreen and screens with minimal theme
-import { BasicHomeScreen } from '../screens/BasicHomeScreen';
-import { CalendarScreen } from '../screens/CalendarScreen';
-import { ChallengesScreen } from '../screens/ChallengesScreen';
-import { FriendsScreen } from '../screens/FriendsScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
+import { HomeScreen as BasicHomeScreen } from '../screens/HomeScreen';
+import { CalendarScreen } from '../screens/analytics/CalendarScreen';
+import { ChallengesScreen } from '../screens/social/ChallengesScreen';
+import { CreateChallengeScreen } from '../screens/social/CreateChallengeScreen';
+import { FriendsScreen } from '../screens/social/FriendsScreen';
+import { ProfileScreen } from '../screens/settings/ProfileScreen';
 
 // Modal and Detail Screens
-import { CreateEditHabitScreen } from '../screens/CreateEditHabitScreen';
-import { HabitDetailsScreen } from '../screens/HabitDetailsScreen';
-import { HabitTimerScreen } from '../screens/HabitTimerScreen';
-import { LoginScreen } from '../screens/LoginScreen';
-import { RegisterScreen } from '../screens/RegisterScreen';
-import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
-import { PremiumScreen } from '../screens/PremiumScreen';
+import { CreateEditHabitScreen } from '../screens/habits/CreateEditHabitScreen';
+import { HabitDetailsScreen } from '../screens/habits/HabitDetailsScreen';
+import { HabitTimerScreen } from '../screens/habits/HabitTimerScreen';
+import { LoginScreen } from '../screens/auth/LoginScreen';
+import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
+import { PremiumScreen } from '../screens/premium/PremiumScreen';
+import { SocialFeedScreen } from '../screens/social/SocialFeedScreen';
+import { HabitGroupsScreen } from '../screens/habits/HabitGroupsScreen';
+import { MentorsScreen } from '../screens/premium/MentorsScreen';
+import { AIInsightsScreen } from '../screens/analytics/AIInsightsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -203,14 +208,14 @@ export function CompleteNavigator() {
         />
         <Stack.Screen
           name="ChallengeDetails"
-          component={ChallengesScreen}
+          component={ChallengesScreen as any}
           options={{
             title: 'Challenge Details',
           }}
         />
         <Stack.Screen
           name="CreateChallenge"
-          component={ChallengesScreen}
+          component={CreateChallengeScreen}
           options={{
             title: 'Create Challenge',
             presentation: 'modal',
@@ -218,14 +223,14 @@ export function CompleteNavigator() {
         />
         <Stack.Screen
           name="FriendProfile"
-          component={ProfileScreen}
+          component={ProfileScreen as any}
           options={{
             title: 'Friend Profile',
           }}
         />
         <Stack.Screen
           name="Settings"
-          component={ProfileScreen}
+          component={ProfileScreen as any}
           options={{
             title: 'Settings',
           }}
@@ -252,6 +257,52 @@ export function CompleteNavigator() {
           options={{
             title: 'Reset Password',
             presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="SocialFeed"
+          component={SocialFeedScreen}
+          options={{
+            title: 'Social Feed',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="HabitGroups"
+          component={HabitGroupsScreen}
+          options={{
+            title: 'Habit Groups',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="Mentors"
+          component={MentorsScreen}
+          options={{
+            title: 'Mentors',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="AIInsights"
+          component={AIInsightsScreen}
+          options={{
+            title: 'AI Insights',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="GroupDetails"
+          component={HabitGroupsScreen as any}
+          options={{
+            title: 'Group Details',
+          }}
+        />
+        <Stack.Screen
+          name="MentorProfile"
+          component={MentorsScreen as any}
+          options={{
+            title: 'Mentor Profile',
           }}
         />
       </Stack.Navigator>

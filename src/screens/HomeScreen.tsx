@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,345 +9,161 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HabitCard, ProgressiveHabitCard, OfflineIndicator } from '../components';
-import { SimpleAnimatedCard } from '../components/SimpleAnimatedCard';
-import { SimpleFAB } from '../components/SimpleFAB';
-import { theme } from '../theme';
-import { HabitWithStats, DailyStats } from '../types';
 import { MainTabScreenProps } from '../types/navigation';
+import { theme } from '../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService } from '../services/ApiService';
-import { dataService } from '../services/DataService';
+import { apiService, dataService } from '../services/core';
+import { timerService } from '../services/habits';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
+import { NeumorphCard, NeumorphismColors, getRandomHabitColor } from '../components/neumorphism';
+import { useSmartNotifications } from '../hooks/useSmartNotifications';
 
 type HomeScreenProps = MainTabScreenProps<'Home'>;
 
-
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuth();
-  const [habits, setHabits] = useState<HabitWithStats[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const { recordActivity, onHabitCompleted, refreshNotifications } = useSmartNotifications();
   const [loading, setLoading] = useState(true);
-  const [greeting, setGreeting] = useState('');
-  const [dateLabel, setDateLabel] = useState('Today');
-  const [userStats, setUserStats] = useState<any>(null);
-  const [weekDates, setWeekDates] = useState<Array<{day: string, date: number, isToday: boolean}>>([]);
-  const [dailyStats, setDailyStats] = useState<DailyStats>({
-    date: new Date().toISOString().split('T')[0],
-    totalHabits: 0,
-    completedHabits: 0,
-    completionRate: 0,
-  });
-  const [todayProgress, setTodayProgress] = useState<Map<string, any>>(new Map());
+  const [refreshing, setRefreshing] = useState(false);
+  const [habits, setHabits] = useState<any[]>([]);
+  const [dailyProgress, setDailyProgress] = useState({ completed: 0, total: 0 });
+  const [greeting, setGreeting] = useState('Good day!');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isToday, setIsToday] = useState(true);
+  const [timerUpdate, setTimerUpdate] = useState(0);
 
   useEffect(() => {
-    initializeData();
-    
-    // Safety timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.warn('Loading timeout reached, forcing completion');
-        setLoading(false);
-        setGreeting('Welcome to iTrackHabit!');
-        setDateLabel('Today');
-        generateWeekDates();
-      }
-    }, 5000);
-    
-    return () => clearTimeout(timeout);
+    loadData();
+  }, [isAuthenticated]);
+
+  // Listen for timer updates to refresh progress display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimerUpdate(prev => prev + 1);
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
   }, []);
 
-  // Reload habits when screen comes into focus (e.g., returning from timer screen)
+  // Force re-render when timer updates occur
+  useEffect(() => {
+    // The timerUpdate state changes every second, triggering a re-render
+    // This ensures the UI stays in sync with timer changes
+  }, [timerUpdate]);
+
+  // Reload data when screen comes into focus (e.g., returning from timer or edit)
   useFocusEffect(
-    useCallback(() => {
-      console.log('🏠 HomeScreen focused - reloading habits, loading state:', loading);
-      if (!loading) { // Only reload if not already loading
-        loadHabits();
-      }
-    }, [loading])
+    React.useCallback(() => {
+      loadData();
+    }, [isAuthenticated, selectedDate])
   );
 
-  const initializeData = async () => {
+  // Update isToday when selectedDate changes
+  useEffect(() => {
+    const today = new Date();
+    const isCurrentDay = selectedDate.toDateString() === today.toDateString();
+    setIsToday(isCurrentDay);
+    loadData();
+  }, [selectedDate]);
+
+  const loadData = async () => {
     try {
-      console.log('🚀 Starting app initialization...');
+      setLoading(true);
       
-      // Load habits and user data
-      await loadHabits();
-      console.log('✅ Habits loaded successfully');
+      // Set dynamic greeting
+      const hour = new Date().getHours();
+      const greetingText = hour < 12 ? 'Good morning!' : 
+                          hour < 18 ? 'Good afternoon!' : 'Good evening!';
+      setGreeting(greetingText);
       
-      await loadUserData();
-      console.log('✅ User data loaded successfully');
+      // Load habits using DataService (works offline and online)
+      await dataService.initialize();
+      const habitsData = await dataService.getHabits();
       
-      generateWeekDates();
-      console.log('✅ App initialization completed');
+      // Load progress for selected date
+      const selectedDateStr = selectedDate.toISOString().split('T')[0];
+      const habitsWithProgress = await Promise.all(
+        habitsData.map(async (habit) => {
+          const progress = await dataService.getHabitProgressForDate(habit.id, selectedDateStr);
+          return {
+            ...habit,
+            isDoneToday: progress?.status === 'done',
+            currentProgress: progress,
+            completionStatus: progress?.status || 'not_done',
+          };
+        })
+      );
+
+      setHabits(habitsWithProgress);
+      
+      // Calculate progress for selected date
+      const completed = habitsWithProgress.filter(habit => habit.isDoneToday).length;
+      
+      setDailyProgress({
+        completed,
+        total: habitsWithProgress.length
+      });
     } catch (error) {
-      console.error('❌ Failed to initialize data:', error);
-      
-      // Set fallback data to prevent infinite loading
-      setGreeting('Welcome to iTrackHabit!');
-      setDateLabel('Today');
-      generateWeekDates();
-      
-      // Still show empty habits array instead of undefined
+      console.error('Failed to load data:', error);
       setHabits([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadUserData = async () => {
-    try {
-      // Simple greeting based on time of day
-      const hour = new Date().getHours();
-      const greetingText = hour < 12 ? 'Good morning!' : 
-                          hour < 18 ? 'Good afternoon!' : 'Good evening!';
-      
-      const dateLabelText = 'Today';
-      
-      setGreeting(greetingText);
-      setDateLabel(dateLabelText);
-      setUserStats(null); // Will implement stats later
-    } catch (error) {
-      console.error('Failed to load user data:', error);
-      setGreeting('Good day!');
-      setDateLabel('Today');
-    }
+  const handleCreateHabit = () => {
+    navigation.navigate('HabitTemplates');
   };
 
-  const generateWeekDates = () => {
-    const today = new Date();
-    const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, ...
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - currentDay + 1); // Start from Monday
-    
-    const weekData = [];
-    const dayNames = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-    
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      
-      weekData.push({
-        day: dayNames[i],
-        date: date.getDate(),
-        isToday: date.toDateString() === today.toDateString(),
-      });
-    }
-    
-    setWeekDates(weekData);
-  };
-
-  const getMoodEmoji = (score?: number): string => {
-    if (!score) return '😊';
-    if (score >= 5) return '😊';
-    if (score >= 4) return '🙂';
-    if (score >= 3) return '😐';
-    if (score >= 2) return '😔';
-    return '😢';
-  };
-
-  const loadHabits = async () => {
-    try {
-      let habitsData: any[] = [];
-      
-      if (isAuthenticated) {
-        // Load from server
-        habitsData = await apiService.getHabits();
-      } else {
-        // Load from local storage
-        const localHabitsStr = await AsyncStorage.getItem('local_habits');
-        if (localHabitsStr) {
-          habitsData = JSON.parse(localHabitsStr);
-        } else {
-          // Create default local habits for demo
-          habitsData = [
-            {
-              id: '1',
-              title: 'Exercise 30 min',
-              description: 'Daily exercise routine',
-              frequency: 'daily',
-              category: 'Health',
-              targetConfig: { targetValue: 30, unit: 'minutes', isTimeBased: true },
-              streak: 0,
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
-            {
-              id: '2',
-              title: 'Drink 8 glasses of water',
-              description: 'Stay hydrated',
-              frequency: 'daily',
-              category: 'Health',
-              targetConfig: { targetValue: 8, unit: 'glasses', isTimeBased: false },
-              streak: 0,
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          ];
-          // Save to local storage
-          await AsyncStorage.setItem('local_habits', JSON.stringify(habitsData));
-        }
-      }
-      
-      // Convert to HabitWithStats format
-      const habitsWithStats = habitsData.map((habit: any) => ({
-        ...habit,
-        currentStreak: habit.streak || 0,
-        longestStreak: habit.longestStreak || 0,
-        completionRate: 0,
-        isDoneToday: false,
-        totalCompletions: habit.totalCompletions || 0,
-        todayProgress: 0,
-        weeklyStreak: 0,
-        currentValue: 0,
-        targetValue: habit.targetConfig?.targetValue || 1,
-        unit: habit.targetConfig?.unit || 'times',
-        // Ensure healthConfig exists for compatibility
-        healthConfig: habit.healthConfig || {
-          metricType: habit.targetConfig?.isTimeBased ? 'minutes' : 'count',
-          targetValue: habit.targetConfig?.targetValue || 1,
-          unit: habit.targetConfig?.unit || 'times'
-        }
-      }));
-      
-      setHabits(habitsWithStats);
-      
-      // Load today's progress from dataService
-      const today = new Date().toISOString().split('T')[0];
-      const progressMap = new Map();
-      
-      try {
-        // Load progress for each habit
-        console.log(`🔍 Loading progress for ${habitsWithStats.length} habits on ${today}`);
-        for (const habit of habitsWithStats) {
-          try {
-            const progress = await dataService.getHabitProgressForDate(habit.id, today);
-            console.log(`📊 Progress for ${habit.title} (${habit.id}) on ${today}:`, progress);
-            if (progress) {
-              progressMap.set(habit.id, progress);
-              // Update habit with current progress
-              habit.currentValue = progress.currentValue || 0;
-              habit.isDoneToday = progress.status === 'done';
-              habit.todayProgress = progress.status === 'done' ? 100 : 
-                (progress.currentValue && progress.targetValue ? 
-                  Math.round((progress.currentValue / progress.targetValue) * 100) : 0);
-              
-              console.log(`✅ Updated habit ${habit.title}: isDoneToday=${habit.isDoneToday}, status=${progress.status}, currentValue=${progress.currentValue}`);
-            } else {
-              console.log(`❌ No progress found for ${habit.title} on ${today}`);
-            }
-          } catch (error) {
-            console.error(`Error loading progress for habit ${habit.id}:`, error);
-          }
-        }
-        
-        setTodayProgress(progressMap);
-        setHabits([...habitsWithStats]); // Re-set with updated progress
-      } catch (error) {
-        console.error('Error loading progress data:', error);
-        setTodayProgress(progressMap);
-      }
-      
-      // Calculate daily stats
-      const completedToday = habitsWithStats.filter(h => {
-        const progress = progressMap.get(h.id);
-        return progress?.status === 'done';
-      }).length;
-      
-      const today = new Date().toISOString().split('T')[0];
-      
-      setDailyStats({
-        date: today,
-        totalHabits: habitsWithStats.length,
-        completedHabits: completedToday,
-        completionRate: habitsWithStats.length > 0 ? Math.round((completedToday / habitsWithStats.length) * 100) : 0,
-      });
-    } catch (error) {
-      console.error('Failed to load habits:', error);
-    }
-  };
-
-  const handleToggleDone = async (habitId: string) => {
-    try {
-      const habit = habits.find(h => h.id === habitId);
-      if (!habit) return;
-
-      const today = new Date().toISOString().split('T')[0];
-      const currentProgress = todayProgress.get(habitId);
-      const newStatus = currentProgress?.status === 'done' ? 'skip' : 'done';
-      
-      // Update progress locally for now
-      console.log('Toggle habit progress:', { habitId, today, newStatus });
-      
-      // Reload habits to get updated stats
-      await loadHabits();
-
-    } catch (error) {
-      console.error('Failed to toggle habit:', error);
-      // TODO: Show error toast
-    }
-  };
-
-  const handleProgressUpdate = async (habitId: string, currentValue: number, status: 'partial' | 'done') => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Update progress locally for now
-      console.log('Update habit progress:', { habitId, today, currentValue, status });
-      
-      // Reload habits to get updated stats
-      await loadHabits();
-
-    } catch (error) {
-      console.error('Failed to update habit progress:', error);
-      // TODO: Show error toast
-    }
-  };
-
-  const handleOpenHabit = (habitId: string) => {
-    navigation.navigate('HabitDetails', { habitId });
-  };
-
-  const handleTimerOpen = (habitId: string) => {
+  const handleOpenHabit = async (habitId: string) => {
+    // Record user activity for smart notifications
+    await recordActivity(habitId, 'viewed_habit');
     navigation.navigate('HabitTimer', { habitId });
   };
 
-  const handleEditHabit = (habitId: string) => {
-    navigation.navigate('EditHabit', { habitId });
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(selectedDate);
+    if (direction === 'prev') {
+      newDate.setDate(newDate.getDate() - 1);
+    } else {
+      newDate.setDate(newDate.getDate() + 1);
+    }
+    setSelectedDate(newDate);
   };
 
-  const handleDeleteHabit = async (habitId: string) => {
-    try {
-      // Delete from local storage for now
-      if (!isAuthenticated) {
-        const localHabitsStr = await AsyncStorage.getItem('local_habits');
-        if (localHabitsStr) {
-          const localHabits = JSON.parse(localHabitsStr);
-          const updatedHabits = localHabits.filter((h: any) => h.id !== habitId);
-          await AsyncStorage.setItem('local_habits', JSON.stringify(updatedHabits));
-        }
-      }
-      // TODO: Implement server deletion when authenticated
-      
-      await loadHabits(); // Reload to get updated stats
-    } catch (error) {
-      console.error('Failed to delete habit:', error);
-      // TODO: Show error toast
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const formatSelectedDate = () => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (selectedDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (selectedDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return selectedDate.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
     }
   };
 
-  const handleCreateHabit = () => {
-    navigation.navigate('CreateHabit', {});
+  const calculateProgressPercentage = () => {
+    return dailyProgress.total > 0 
+      ? Math.round((dailyProgress.completed / dailyProgress.total) * 100) 
+      : 0;
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await loadHabits();
+      await loadData();
     } catch (error) {
       console.error('Failed to refresh:', error);
     } finally {
@@ -356,185 +171,200 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+  const getDefaultEmoji = (title: string): string => {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('run')) return '🏃';
+    if (titleLower.includes('read')) return '📖';
+    if (titleLower.includes('book')) return '📚';
+    if (titleLower.includes('meditat')) return '🧘';
+    if (titleLower.includes('exercise')) return '💪';
+    if (titleLower.includes('walk')) return '🚶';
+    if (titleLower.includes('sleep')) return '🛏️';
+    if (titleLower.includes('water')) return '💧';
+    if (titleLower.includes('yoga')) return '🧘';
+    if (titleLower.includes('gym')) return '🏋️';
+    if (titleLower.includes('bike') || titleLower.includes('cycl')) return '🚴';
+    if (titleLower.includes('swim')) return '🏊';
+    if (titleLower.includes('write') || titleLower.includes('journal')) return '✍️';
+    if (titleLower.includes('music')) return '🎵';
+    if (titleLower.includes('cook')) return '👨‍🍳';
+    return '🎯'; // Default emoji
+  };
+
+  const renderHabit = ({ item }: { item: any }) => {
+    // For HabitWithStats, we have targetConfig and isDoneToday
+    const targetValue = item.targetConfig?.targetValue || 1;
+    const unit = item.targetConfig?.unit || 'times';
+    const isCompleted = item.isDoneToday;
+    const isTimeBased = item.targetConfig?.isTimeBased || false;
+    
+    // Get saved progress
+    let currentValue = item.currentProgress?.currentValue || 0;
+    
+    // Check for active timer progress
+    const activeTimer = timerService.getTimer(item.id);
+    if (activeTimer && isTimeBased && isToday) {
+      // For time-based habits, use timer progress if it's greater than saved progress
+      const timerMinutes = Math.floor(activeTimer.currentTime / 60);
+      // If timer is reset (currentTime is 0), don't override saved progress unless saved progress is also 0
+      if (activeTimer.currentTime === 0 && !activeTimer.isRunning && !activeTimer.isPaused) {
+        // Timer was reset, show 0 progress
+        currentValue = 0;
+      } else {
+        // Timer is active or has progress, use the maximum of saved vs timer progress
+        currentValue = Math.max(currentValue, timerMinutes);
+      }
+    }
+    
+    const progressPercentage = targetValue > 0 ? Math.min((currentValue / targetValue) * 100, 100) : 0;
+    const displayEmoji = item.emoji || getDefaultEmoji(item.title);
+    
+    return (
+      <TouchableOpacity onPress={() => handleOpenHabit(item.id)}>
+        <NeumorphCard variant="convex" size="medium" style={styles.habitCard}>
+          <View style={styles.habitCardContent}>
+            <View style={styles.habitMainInfo}>
+              <View style={styles.habitColorIndicator}>
+                {displayEmoji ? (
+                  <Text style={styles.habitTitle}>{displayEmoji}</Text>
+                ) : (
+                  <View 
+                    style={[
+                      styles.colorDot, 
+                      { backgroundColor: item.color || NeumorphismColors.habitColors.sage }
+                    ]} 
+                  />
+                )}
+              </View>
+              <View style={styles.habitInfo}>
+                <Text style={styles.habitTitle}>{item.title}</Text>
+                <Text style={styles.progressText}>
+                  {item.targetConfig?.isTimeBased ? `${targetValue} min` : `${targetValue} ${unit}`}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.progressInfo}>
+              <Text style={[
+                styles.progressText,
+                isCompleted && styles.completedText
+              ]}>
+                {isCompleted ? '✓ Done' : `${currentValue}/${targetValue}`}
+              </Text>
+            </View>
+          </View>
+          
+          {/* Progress Bar */}
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarBackground}>
+              {progressPercentage > 0 && (
+                <View 
+                  style={[
+                    styles.progressBarFill, 
+                    { 
+                      width: `${progressPercentage}%`,
+                      backgroundColor: item.color || NeumorphismColors.habitColors.sage
+                    }
+                  ]} 
+                />
+              )}
+            </View>
+          </View>
+        </NeumorphCard>
+      </TouchableOpacity>
+    );
+  };
+
   const formatDate = () => {
-    const today = new Date();
-    return today.toLocaleDateString('en-US', {
+    return selectedDate.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
     });
   };
 
-  // FAB menu items
-  const fabMenuItems = [
-    {
-      id: 'create-habit',
-      label: 'New Habit',
-      icon: 'add-circle-outline' as const,
-      color: theme.colors.primary,
-      onPress: handleCreateHabit,
-    },
-    {
-      id: 'import-habits',
-      label: 'Import',
-      icon: 'download-outline' as const,
-      color: theme.colors.accent,
-      onPress: () => {
-        // TODO: Implement import functionality
-        console.log('Import habits');
-      },
-    },
-    {
-      id: 'quick-timer',
-      label: 'Quick Timer',
-      icon: 'timer-outline' as const,
-      color: theme.colors.warning,
-      onPress: () => {
-        // TODO: Implement quick timer
-        console.log('Quick timer');
-      },
-    },
-  ];
 
   const renderHeader = () => (
     <View style={styles.header}>
-      {/* Welcome Section */}
-      <View style={styles.welcomeSection}>
-        <View style={styles.welcomeContent}>
-          <Text style={styles.welcomeText}>{greeting}</Text>
+      {/* Greeting Card */}
+      <NeumorphCard variant="convex" size="medium" style={styles.greetingCard}>
+        <View style={styles.greetingContent}>
+          <Text style={styles.greetingText}>{greeting}</Text>
           <Text style={styles.dateText}>{formatDate()}</Text>
         </View>
-        <OfflineIndicator />
-      </View>
+      </NeumorphCard>
       
-      {/* Quick Progress Overview */}
-      <View style={styles.progressOverview}>
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressTitle}>Today's Progress</Text>
-            <Text style={styles.progressPercentage}>{dailyStats.completionRate}%</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill,
-                { width: `${dailyStats.completionRate}%` }
-              ]} 
+      {/* Date Navigation & Progress */}
+      <View style={styles.navigationProgressRow}>
+        <NeumorphCard variant="subtle" style={styles.dateNavCard}>
+          <TouchableOpacity 
+            onPress={() => navigateDate('prev')}
+            style={styles.navButton}
+          >
+            <Ionicons name="chevron-back" size={18} color={theme.colors.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={goToToday} style={styles.dateDisplay}>
+            <Text style={styles.dateDisplayText}>{formatSelectedDate()}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={() => navigateDate('next')}
+            style={styles.navButton}
+            disabled={isToday}
+          >
+            <Ionicons 
+              name="chevron-forward" 
+              size={18} 
+              color={isToday ? theme.colors.textSecondary : theme.colors.text} 
             />
-          </View>
-          <Text style={styles.progressSubtext}>
-            {dailyStats.completedHabits} of {dailyStats.totalHabits} 
-            {dailyStats.totalHabits === 1 ? ' habit' : ' habits'} completed
+          </TouchableOpacity>
+        </NeumorphCard>
+
+        <NeumorphCard variant="convex" style={styles.progressMiniCard}>
+          <Text style={styles.progressPercentage}>{calculateProgressPercentage()}%</Text>
+          <Text style={styles.progressMiniText}>
+            {dailyProgress.completed}/{dailyProgress.total}
           </Text>
-        </View>
-        
-        {userStats?.currentStreak > 0 && (
-          <View style={styles.streakBadge}>
-            <Ionicons name="flame" size={theme.fontSize.md} color={theme.colors.warning} />
-            <Text style={styles.streakText}>
-              {userStats.currentStreak} {userStats.currentStreak === 1 ? 'day' : 'days'} streak!
-            </Text>
-          </View>
-        )}
+        </NeumorphCard>
       </View>
-      
-      {/* Section Title */}
+
+      {/* Section Header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Your Habits</Text>
-        <View style={styles.habitCounter}>
-          <Text style={styles.sectionSubtitle}>{habits.length}</Text>
-        </View>
+        <Text style={styles.sectionSubtitle}>{habits.length}</Text>
       </View>
-    </View>
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="checkbox-outline" size={theme.fontSize.xxxl * 2} color={theme.colors.textMuted} />
-      <Text style={styles.emptyTitle}>No habits yet</Text>
-      <Text style={styles.emptySubtitle}>
-        Create your first habit to start building better routines
-      </Text>
-      <TouchableOpacity style={styles.emptyButton} onPress={handleCreateHabit}>
-        <Text style={styles.emptyButtonText}>Create Habit</Text>
-      </TouchableOpacity>
     </View>
   );
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
-        <Text style={styles.loadingText}>Loading your habits...</Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
       </SafeAreaView>
     );
   }
-
-  // Ultra simple version to debug the _toString error
-  const renderHabit = ({ item }: { item: HabitWithStats }) => {
-    // Debug log to check if isDoneToday is set correctly
-    if (item.title.includes('Exercise')) {
-      console.log(`Rendering ${item.title}: isDoneToday=${item.isDoneToday}`);
-    }
-    
-    return (
-      <TouchableOpacity 
-        style={[
-          styles.simpleCard, 
-          { borderLeftColor: item.isDoneToday ? '#4CAF50' : theme.colors.primary },
-          item.isDoneToday && styles.completedCard
-        ]}
-        onPress={() => handleOpenHabit(item.id)}
-      >
-        <View style={styles.cardContent}>
-          <View style={styles.habitInfo}>
-            <Text style={[
-              styles.habitTitle,
-              item.isDoneToday && styles.completedTitle
-            ]}>
-              {item.title}
-            </Text>
-            {item.description && (
-              <Text style={styles.habitDescription}>{item.description}</Text>
-            )}
-          </View>
-          <View style={styles.progressInfo}>
-            <Text style={[
-              styles.progressText,
-              item.isDoneToday && styles.completedProgress
-            ]}>
-              {item.isDoneToday ? '✓ Complete' : `${item.currentValue || 0}/${item.targetValue}`}
-            </Text>
-          </View>
-        </View>
-        {item.isDoneToday && (
-          <View style={styles.completionBadge}>
-            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
         data={habits}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={renderHabit}
         ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={habits.length === 0 ? styles.emptyContent : styles.content}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
       />
       
       <TouchableOpacity 
-        style={styles.simpleFab} 
+        style={styles.fab} 
         onPress={handleCreateHabit}
       >
-        <Ionicons name="add" size={28} color={theme.colors.white} />
+        <Ionicons name="add" size={32} color={theme.colors.white} />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -543,216 +373,265 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: NeumorphismColors.background,
   },
   content: {
     paddingBottom: 100,
   },
-  emptyContent: {
-    flexGrow: 1,
-  },
   loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
-    fontWeight: theme.fontWeight.medium,
   },
   header: {
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.background,
+    paddingVertical: theme.spacing.sm,
   },
-  welcomeSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 24,
+  greetingCard: {
+    marginBottom: theme.spacing.md,
   },
-  welcomeContent: {
-    flex: 1,
+  greetingContent: {
+    alignItems: 'center',
   },
-  welcomeText: {
-    fontSize: theme.fontSize.title,
+  greetingText: {
+    fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
   dateText: {
     fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.normal,
     color: theme.colors.textSecondary,
   },
-  progressOverview: {
-    marginBottom: theme.spacing.xxl,
-  },
-  progressCard: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.xl,
-    borderRadius: theme.borderRadius.xxl,
-    marginBottom: theme.spacing.lg,
-    // Removed shadow for debugging
-  },
-  progressHeader: {
+  navigationProgressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: theme.spacing.md,
+    gap: theme.spacing.md,
   },
-  progressTitle: {
+  dateNavCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+  },
+  navButton: {
+    padding: theme.spacing.xs,
+  },
+  dateDisplay: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  dateDisplayText: {
     fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
+    fontWeight: theme.fontWeight.medium,
+  },
+  progressMiniCard: {
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    minWidth: 80,
   },
   progressPercentage: {
     fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.primary,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: theme.colors.primaryLight,
-    borderRadius: theme.borderRadius.sm,
-    overflow: 'hidden',
-    marginBottom: theme.spacing.md,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.sm,
-  },
-  progressSubtext: {
-    fontSize: theme.fontSize.sm,
+  progressMiniText: {
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: theme.colors.warningLight,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.warningMuted,
-  },
-  streakText: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.warning,
-    marginLeft: theme.spacing.xs,
+    marginTop: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
   },
   sectionTitle: {
-    fontSize: theme.fontSize.xxl,
+    fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
   },
-  habitCounter: {
-    backgroundColor: theme.colors.primaryLight,
-    borderRadius: theme.borderRadius.full,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    minWidth: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   sectionSubtitle: {
     fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.primary,
+    color: theme.colors.textSecondary,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  card: {
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.md,
+    // Let neumorphism component handle all styling
+  },
+  cardContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.xxl,
+    justifyContent: 'space-between',
   },
-  emptyTitle: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.medium,
-    color: theme.colors.text,
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
+  habitMainInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  emptySubtitle: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textTertiary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: theme.spacing.xxl,
+  habitColorIndicator: {
+    marginRight: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  emptyButton: {
-    backgroundColor: theme.colors.interactive,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.sm,
-  },
-  emptyButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.medium,
-  },
-  // Simple card styles with basic shadow
-  simpleCard: {
-    backgroundColor: theme.colors.surface,
-    marginHorizontal: theme.spacing.lg,
-    marginVertical: theme.spacing.sm,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    borderLeftWidth: 4,
-    // Basic compatible shadow
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
+  colorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    // Neumorphic effect for color dot
+    shadowColor: NeumorphismColors.darkShadow,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  habitInfo: {
+    flex: 1,
+  },
+  habitTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  habitDescription: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
   },
   progressInfo: {
     alignItems: 'center',
   },
-  simpleFab: {
+  progressText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.primary,
+  },
+  completedText: {
+    color: theme.colors.success || '#22c55e',
+  },
+  progressBarContainer: {
+    marginTop: theme.spacing.md,
+    paddingHorizontal: 0,
+  },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: '#D1D9E6',
+    borderRadius: 3,
+    overflow: 'hidden',
+    // Inset neumorphism for progress bar
+    shadowColor: '#A3B1C6',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: -2,
+    borderWidth: 1,
+    borderColor: '#C5CCD6',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2,
+    // Subtle neumorphism elevation for progress fill
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 1,
+  },
+  fab: {
     position: 'absolute',
-    bottom: theme.spacing.xl,
-    right: theme.spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
+    bottom: 180, // Lifted much higher to clear the neumorphic tab bar
+    right: 24,
+    width: 64, // Slightly larger
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#667eea',
     justifyContent: 'center',
     alignItems: 'center',
-    // Removed shadow for debugging
+    // Enhanced neumorphism effects
+    shadowColor: '#A3B1C6',
+    shadowOffset: {
+      width: 10,
+      height: 10,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 25,
+    elevation: 15,
+    // Dual shadow effect with light shadow
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    // Add a subtle inner glow effect
+    overflow: 'hidden',
   },
-  completedCard: {
-    backgroundColor: '#F8FFF8',
-    borderLeftColor: '#4CAF50',
+  dateNavigation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
-  completedTitle: {
-    color: '#2E7D32',
-    textDecorationLine: 'line-through',
-    textDecorationStyle: 'solid',
-    textDecorationColor: '#4CAF50',
+  dateNavButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  completedProgress: {
-    color: '#4CAF50',
-    fontWeight: theme.fontWeight.bold,
+  todayHint: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
   },
-  completionBadge: {
-    position: 'absolute',
-    top: theme.spacing.md,
-    right: theme.spacing.md,
+  // New compact styles
+  compactCard: {
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.xs,
+    backgroundColor: NeumorphismColors.surface,
+    borderRadius: theme.borderRadius.md,
+    // Subtle neumorphic effect
+    shadowColor: NeumorphismColors.darkShadow,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  compactCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+  },
+  compactColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: theme.spacing.md,
+  },
+  compactHabitTitle: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.text,
+  },
+  // Updated habit card styles
+  habitCard: {
+    marginHorizontal: theme.spacing.lg,
+    marginVertical: theme.spacing.sm,
+  },
+  habitCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
 });

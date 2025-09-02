@@ -1,7 +1,8 @@
 export type FrequencyType = 'daily' | 'weekly' | 'custom';
 export type HabitProgressStatus = 'done' | 'skip' | 'partial';
-export type FriendStatus = 'pending' | 'accepted';
-export type ChallengeType = 'streak' | 'completion' | 'custom';
+export type FriendStatus = 'pending' | 'accepted' | 'declined' | 'blocked';
+export type ChallengeType = 'streak' | 'completion' | 'custom' | 'habit_based';
+export type ChallengeParticipantStatus = 'active' | 'completed' | 'dropped';
 export type HabitType = 'manual' | 'health';
 export type HealthMetricType = 'steps' | 'exercise_minutes' | 'calories_burned' | 'sleep_hours' | 'workout_count';
 export type UserSubscriptionStatus = 'free' | 'premium' | 'trial';
@@ -63,6 +64,8 @@ export interface Habit {
   type: HabitType;
   healthConfig?: HealthHabitConfig;
   targetConfig?: HabitTargetConfig; // For manual habits with measurable targets
+  color?: string; // Habit color for visual distinction
+  emoji?: string; // Habit emoji for visual representation
 }
 
 export interface HabitTargetConfig {
@@ -140,11 +143,15 @@ export interface Challenge {
   creatorId: string;
   title: string;
   description?: string;
+  habitType: string;
+  targetValue: number;
+  targetUnit: string;
+  durationDays: number;
   type: ChallengeType;
-  habitId?: string;
   startDate: string;
   endDate: string;
-  members: string[];
+  isPublic: boolean;
+  maxParticipants?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -155,6 +162,12 @@ export interface HabitWithStats extends Habit {
   completionRate: number;
   isDoneToday: boolean;
   totalCompletions: number;
+  currentValue?: number;
+  targetValue?: number;
+  category?: string;
+  description?: string;
+  streak?: number;
+  todayProgress?: number;
 }
 
 export interface ChallengeWithStats extends Challenge {
@@ -180,4 +193,103 @@ export interface UserProfile extends User {
   totalCompletions: number;
   currentStreaks: number;
   averageCompletionRate: number;
+}
+
+// Enhanced social and gamification interfaces
+export interface ChallengeParticipant {
+  id: string;
+  challengeId: string;
+  userId: string;
+  score: number;
+  rank?: number;
+  status: ChallengeParticipantStatus;
+  completionPercentage: number;
+  joinedAt: string;
+  completedAt?: string;
+}
+
+export interface ChallengeProgress {
+  id: string;
+  challengeId: string;
+  userId: string;
+  date: string;
+  value: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  type: 'streak' | 'completion' | 'habit_count' | 'challenge' | 'consistency';
+  targetValue: number;
+  criteria: {
+    type: string;
+    count?: number;
+    days?: number;
+    [key: string]: any;
+  };
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface UserBadge {
+  id: string;
+  userId: string;
+  badgeId: string;
+  earnedAt: string;
+  progress?: {
+    current: number;
+    target: number;
+    [key: string]: any;
+  };
+  badge?: Badge;
+}
+
+export interface ChallengeWithParticipants extends Challenge {
+  creator?: User;
+  participants: ChallengeParticipant[];
+  participantCount: number;
+  userParticipation?: ChallengeParticipant;
+  leaderboard: Array<{
+    userId: string;
+    userName: string;
+    score: number;
+    rank: number;
+    completionPercentage: number;
+  }>;
+}
+
+export interface FriendWithUser extends Friend {
+  friend?: User;
+  requester?: User;
+  addressee?: User;
+}
+
+export interface CreateChallengeRequest {
+  title: string;
+  description?: string;
+  habitType: string;
+  targetValue: number;
+  targetUnit: string;
+  durationDays: number;
+  isPublic: boolean;
+  maxParticipants?: number;
+}
+
+export interface BadgeProgress {
+  id: string;
+  badgeId: string;
+  userId: string;
+  currentValue: number;
+  targetValue: number;
+  progressPercentage: number;
+  isEarned: boolean;
+  earnedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  badge: Badge;
 }

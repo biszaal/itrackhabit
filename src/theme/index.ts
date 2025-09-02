@@ -2,12 +2,12 @@
 // Inspired by Reactiive.io's vibrant and fluid design philosophy
 export const theme = {
   colors: {
-    // Primary colors - Vibrant and energetic
-    primary: '#6366F1', // Modern indigo - perfect for animations
-    primaryLight: '#EEF2FF', // Ultra-light indigo background
-    primaryDark: '#4338CA', // Deep indigo for contrast
-    primarySoft: '#C7D2FE', // Soft indigo for subtle elements
-    primaryGradient: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)', // Animated gradient
+    // Primary colors - Beautiful blue tones
+    primary: '#667eea', // Neumorphism primary blue
+    primaryLight: '#DBEAFE', // Ultra-light blue background
+    primaryDark: '#1E40AF', // Deep blue for contrast
+    primarySoft: '#93C5FD', // Soft blue for subtle elements
+    primaryGradient: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)', // Blue gradient
     
     // Accent colors - Electric and modern
     accent: '#06B6D4', // Electric cyan - great for highlights
@@ -20,20 +20,23 @@ export const theme = {
     secondaryLight: '#FEF3C7',
     secondaryGradient: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
     
-    // Background system - Modern and clean
-    background: '#FAFAFA', // Slightly off-white for warmth
-    backgroundSecondary: '#F4F4F5', // Cool neutral
-    backgroundTertiary: '#E4E4E7', // Subtle contrast
-    surface: '#FFFFFF', // Pure white for cards
-    surfaceElevated: '#FFFFFF', // White with elevation
-    surfaceOverlay: 'rgba(255, 255, 255, 0.95)', // Glass morphism
+    // Background system - Neumorphism colors
+    background: '#E0E5EC', // Neumorphism background
+    backgroundSecondary: '#F0F5FC', // Light variant
+    backgroundTertiary: '#D1D9E6', // Dark variant
+    surface: '#E0E5EC', // Neumorphism surface
+    surfaceElevated: '#E0E5EC', // Elevated surface
+    surfaceOverlay: 'rgba(224, 229, 236, 0.95)', // Neumorphism overlay
     
-    // Text hierarchy - Sharp and readable
-    text: '#18181B', // Rich black (softer than pure black)
-    textSecondary: '#52525B', // Medium zinc
-    textTertiary: '#A1A1AA', // Light zinc
-    textMuted: '#D4D4D8', // Very light zinc
-    textDisabled: '#F4F4F5', // Disabled text
+    // Text hierarchy - Optimized for neumorphism
+    text: '#2D3748', // Dark text for neumorphism
+    textSecondary: '#4A5568', // Medium dark text
+    textTertiary: '#718096', // Medium gray text
+    textMuted: '#A0AEC0', // Muted text
+    textDisabled: '#CBD5E0', // Disabled text
+    
+    // Pure white for glass elements and special cases
+    white: '#FFFFFF', // Pure white
     
     // Borders and dividers - Modern and subtle
     border: '#E4E4E7', // Light zinc border
@@ -55,6 +58,7 @@ export const theme = {
     
     warning: '#F59E0B', // Amber
     warningLight: '#FEF3C7',
+    warningMuted: '#FBBF24',
     warningSoft: '#FCD34D',
     warningGradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
     
@@ -79,9 +83,9 @@ export const theme = {
     categoryTeal: '#2DD4BF', // Bright teal
     categoryIndigo: '#818CF8', // Bright indigo
     
-    // Glass morphism and overlays
-    glass: 'rgba(255, 255, 255, 0.25)', // Glass effect
-    glassBorder: 'rgba(255, 255, 255, 0.18)',
+    // Neumorphism shadows and overlays
+    lightShadow: '#FFFFFF',
+    darkShadow: '#A3B1C6',
     overlay: 'rgba(0, 0, 0, 0.5)', // Modal overlays
     overlayLight: 'rgba(0, 0, 0, 0.3)', // Light overlay
     backdrop: 'rgba(0, 0, 0, 0.8)', // Backdrop filter
@@ -93,7 +97,7 @@ export const theme = {
     glow: '#6366F1', // Glow effects
     
     // Deprecated - keeping for backward compatibility
-    white: '#FFFFFF',
+    whiteDeprecated: '#FFFFFF',
     blue: '#7DD3FC',
     orange: '#FDBA74',
     purple: '#C4B5FD',
@@ -102,9 +106,9 @@ export const theme = {
     indigo: '#A5B4FC',
     teal: '#5EEAD4',
     yellow: '#FDE047',
-    secondary: '#06B6D4',
-    secondaryLight: '#ECFEFF',
-    textLight: '#94A3B8',
+    lightGreen: '#10B981',
+    lightRed: '#EF4444',
+    lightOrange: '#FB923C',
   },
   
   spacing: {
@@ -170,6 +174,20 @@ export const theme = {
       hover: 1.05,
       pop: 1.1,
     },
+    spring: {
+      default: {
+        damping: 15,
+        stiffness: 150,
+      },
+      bouncy: {
+        damping: 10,
+        stiffness: 100,
+      },
+      gentle: {
+        damping: 20,
+        stiffness: 200,
+      },
+    },
   },
   
   // Hermes-compatible shadow system (simplified)
@@ -185,11 +203,12 @@ export const theme = {
     floating: {},
   },
   
-  // Simplified glass effects for Hermes compatibility
-  glass: {
-    light: {},
-    medium: {},
-    heavy: {},
+  // Neumorphism effects
+  neumorphism: {
+    background: '#E0E5EC',
+    surface: '#E0E5EC',
+    lightShadow: '#FFFFFF',
+    darkShadow: '#A3B1C6',
   },
 } as const;
 

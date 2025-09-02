@@ -1,11 +1,20 @@
-export { HabitCard } from './HabitCard';
-export { ProgressiveHabitCard } from './ProgressiveHabitCard';
+// Legacy Components
 export { Button } from './Button';
-export { CalendarHeatmap } from './CalendarHeatmap';
-export { HealthInsightsComponent } from './HealthInsightsComponent';
 export { OfflineIndicator } from './OfflineIndicator';
-export { AnimatedHabitCard } from './AnimatedHabitCard';
-export { AnimatedHabitsList } from './AnimatedFlatList';
-export { AnimatedFAB } from './AnimatedFAB';
-export { CompoundProgressCard } from './CompoundProgressCard';
+export { BadgeComponent, BadgeList } from './BadgeComponent';
 export { FourLawsDesigner } from './FourLawsDesigner';
+export { CompoundProgressCard } from './CompoundProgressCard';
+export { UpgradePromptModal } from './UpgradePrompt';
+export { NotificationSettings } from './NotificationSettings';
+
+// Neumorphism Components
+export * from './neumorphism';
+
+// UI Components
+export * from './ui';
+
+// Analytics Components
+export * from './analytics';
+
+// Habit Components
+export * from './habits';

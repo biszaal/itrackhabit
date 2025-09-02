@@ -10,16 +10,36 @@ export type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   CreateHabit: { habitId?: string; type?: 'health'; habitTemplate?: any; isCustom?: boolean };
+  CreateEditHabit: { template?: any; habit?: any };
+  HabitTemplates: undefined;
   EditHabit: { habitId: string };
   HabitDetails: { habitId: string };
   HabitTimer: { habitId: string };
   HabitConfig: { habitTemplate: any };
+  HabitEdit: { habit: any };
   ChallengeDetails: { challengeId: string };
   CreateChallenge: { habitId?: string };
   FriendProfile: { userId: string };
   Settings: undefined;
+  HabitNotificationSettings: undefined;
+  Analytics: undefined;
+  Achievements: undefined;
+  Onboarding: undefined;
   Premium: undefined;
   HealthPermissions: { habitId?: string };
+  CompoundProgress: undefined;
+  HabitDesign: { habitId: string };
+  ContactSelection: undefined;
+  SocialFeed: undefined;
+  HabitGroups: undefined;
+  Mentors: undefined;
+  GroupDetails: { groupId: string };
+  MentorProfile: { mentorId: string };
+  AIInsights: undefined;
+  NotificationSettingsNew: undefined;
+  DataManagement: undefined;
+  PrivacySecurity: undefined;
+  DeveloperTools: undefined;
 };
 
 export type AuthStackParamList = {
