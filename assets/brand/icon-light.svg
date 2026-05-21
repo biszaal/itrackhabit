@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="iTrackHabit app icon (light)">
+  <!-- Hero app icon: cream tile + two-tone mark. Corners shown for preview;
+       iOS masks them automatically, so the shipped icon.png is a full square. -->
+  <rect width="1024" height="1024" rx="224" fill="#FBF6EE"/>
+  <g transform="translate(512,512) scale(7.53) translate(-50,-48)">
+    <circle cx="50" cy="24" r="10" fill="#6366F1"/>
+    <rect x="42" y="42" width="16" height="40" rx="8" fill="#1A2B45"/>
+  </g>
+</svg>

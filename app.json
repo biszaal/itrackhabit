@@ -1,0 +1,85 @@
+{
+  "expo": {
+    "name": "iTrackHabit",
+    "slug": "itrackhabit",
+    "version": "1.0.1",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "description": "Track your habits and build better routines with iTrackHabit. A beautiful, offline-first habit tracker with neumorphic design.",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FBF6EE"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.biszaal.itrackhabit",
+      "buildNumber": "23",
+      "requireFullScreen": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSContactsUsageDescription": "This app needs access to your contacts to let you invite friends to join iTrackHabit.",
+        "NSUserNotificationsUsageDescription": "This app uses notifications to remind you about your habits.",
+        "NSCameraUsageDescription": "This app uses the camera to let you take photos for your habit progress.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to let you select images for your habits."
+      },
+      "usesAppleSignIn": false
+    },
+    "android": {
+      "package": "com.biszaal.itrackhabit",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FBF6EE"
+      },
+      "permissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-sqlite",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1",
+            "flipper": false,
+            "newArchEnabled": false,
+            "ccacheEnabled": false,
+            "extraPods": []
+          },
+          "android": {},
+          "proguardMinifyEnabled": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "835bd309-fdb9-4959-9b4c-030358bb120b"
+      }
+    },
+    "owner": "biszaal",
+    "primaryColor": "#6366F1",
+    "scheme": "itrackhabit",
+    "githubUrl": "https://github.com/biszaal/iTrackHabit"
+  }
+}

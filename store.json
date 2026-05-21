@@ -1,0 +1,16 @@
+{
+  "configVersion": 0,
+  "ios": {
+    "info": {
+      "en-US": {
+        "title": "iTrackHabit - Habit Tracker",
+        "subtitle": "Build Better Routines",
+        "description": "Transform your life one habit at a time with iTrackHabit - a beautiful, intuitive habit tracker designed to help you build lasting routines and achieve your goals.\n\n🌟 KEY FEATURES:\n\n✓ Beautiful Neumorphic Design - Enjoy a modern, clean interface that makes habit tracking delightful\n✓ Offline-First Architecture - Track your habits anywhere, anytime, even without internet\n✓ Smart Progress Tracking - Visual progress indicators and streak counters keep you motivated\n✓ Flexible Habit Goals - Set daily, weekly, or custom frequency targets\n✓ Social Challenges - Join friends in habit-building challenges for extra motivation\n✓ Achievement Badges - Unlock rewards as you hit milestones and maintain streaks\n✓ Data Sync - Seamlessly sync across devices with secure cloud backup\n✓ Comprehensive Analytics - Detailed insights into your habit-building journey\n\n🎯 PERFECT FOR:\n• Building morning routines\n• Fitness and health goals\n• Learning new skills\n• Breaking bad habits\n• Productivity improvement\n• Personal development\n\n🔒 PRIVACY FOCUSED:\nYour data belongs to you. We use industry-standard encryption and never share your personal information.\n\n💪 START YOUR TRANSFORMATION:\nWhether you want to drink more water, exercise daily, read regularly, or develop any positive habit - iTrackHabit provides the tools and motivation you need to succeed.\n\nDownload now and start building the habits that will transform your life!",
+        "keywords": "habit tracker,habits,routine,productivity,goals,self-improvement,motivation,streak,challenges,fitness,health,personal development,behavior change,daily planner",
+        "marketingUrl": "https://github.com/biszaal/iTrackHabit",
+        "supportUrl": "https://github.com/biszaal/iTrackHabit/issues",
+        "privacyPolicyUrl": "https://github.com/biszaal/iTrackHabit"
+      }
+    }
+  }
+}

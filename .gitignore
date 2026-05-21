@@ -1,0 +1,21 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+.DS_Store
+
+# native build output
+ios/
+android/
+
+# env / secrets (.env.example is intentionally tracked)
+.env
+.env.local
+.env*.local
+.env.development
+.env.production
+
+# typescript / metro
+*.tsbuildinfo
+.metro-health-check*

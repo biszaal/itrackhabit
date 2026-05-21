@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" width="360" height="96" role="img" aria-label="iTrackHabit wordmark">
+  <!-- The leading "i" is the monogram; "Track" navy, "Habit" indigo.
+       Requires Inter; falls back to system sans where unavailable. -->
+  <g transform="translate(10,8) scale(0.92) translate(-50,-48)">
+    <circle cx="50" cy="24" r="9" fill="#6366F1"/>
+    <rect x="42" y="40" width="16" height="52" rx="8" fill="#1A2B45"/>
+  </g>
+  <text x="44" y="66" font-family="Inter, -apple-system, system-ui, sans-serif"
+        font-size="58" font-weight="700" letter-spacing="-1.7">
+    <tspan fill="#1A2B45">Track</tspan><tspan fill="#6366F1">Habit</tspan>
+  </text>
+</svg>

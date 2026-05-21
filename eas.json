@@ -1,0 +1,44 @@
+{
+  "cli": {
+    "version": ">= 7.8.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "GCC_TREAT_WARNINGS_AS_ERRORS": "NO",
+        "CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS": "NO"
+      }
+    },
+    "production": {
+      "ios": {
+        "autoIncrement": true,
+        "credentialsSource": "remote"
+      },
+      "android": {
+        "autoIncrement": "versionCode"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "biszaal@icloud.com",
+        "appleTeamId": "HG4G2ZMGV8",
+        "ascAppId": "6751805707"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account-key.json",
+        "track": "production"
+      }
+    }
+  }
+}
