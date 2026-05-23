@@ -32,20 +32,26 @@ function canvasSVG(size, bg, markFrac, dot, stem) {
   );
 }
 
-async function render(svg, outSize, file) {
-  await sharp(Buffer.from(svg)).resize(outSize, outSize).png().toFile(path.join(OUT, file));
-  console.log('wrote', file, `${outSize}x${outSize}`);
+async function render(svg, outSize, file, { flatten = false } = {}) {
+  let img = sharp(Buffer.from(svg)).resize(outSize, outSize);
+  if (flatten) img = img.flatten({ background: C.cream }); // strip alpha -> opaque
+  await img.png().toFile(path.join(OUT, file));
+  console.log('wrote', file.padEnd(22), `${outSize}x${outSize}`, flatten ? '(opaque)' : '(alpha)');
 }
 
 (async () => {
-  // App icon — Light hero: full-bleed cream square (iOS masks corners).
-  await render(canvasSVG(1024, C.cream, 0.5, C.indigo, C.navy), 1024, 'icon.png');
+  // App icon — Light hero, OPAQUE (no alpha) for App Store compliance.
+  await render(canvasSVG(1024, C.cream, 0.5, C.indigo, C.navy), 1024, 'icon.png', { flatten: true });
   // Android adaptive foreground — transparent, mark inside the 66% safe zone.
   await render(canvasSVG(1024, null, 0.46, C.indigo, C.navy), 1024, 'adaptive-icon.png');
+  // Android monochrome (themed icon, API 33+) — single-color mark, transparent.
+  await render(canvasSVG(1024, null, 0.46, C.navy, C.navy), 1024, 'monochrome-icon.png');
+  // Android notification small icon — white silhouette on transparent (alpha is all that's used).
+  await render(canvasSVG(384, null, 0.66, C.white, C.white), 96, 'notification-icon.png');
   // Splash — transparent mark centered (cream background set in app.json).
   await render(canvasSVG(1024, null, 0.4, C.indigo, C.navy), 1024, 'splash-icon.png');
-  // Favicon — cream square, composed large then downscaled for crisp edges.
-  await render(canvasSVG(256, C.cream, 0.6, C.indigo, C.navy), 48, 'favicon.png');
+  // Favicon — opaque cream square, composed large then downscaled for crisp edges.
+  await render(canvasSVG(256, C.cream, 0.6, C.indigo, C.navy), 48, 'favicon.png', { flatten: true });
 })().catch((e) => {
   console.error(e);
   process.exit(1);
