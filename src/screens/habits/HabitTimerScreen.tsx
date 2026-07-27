@@ -10,6 +10,7 @@ import { dataService } from '../../services/core';
 import { timerService } from '../../services/habits/TimerService';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen } from '../../components/ds';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 type HabitTimerScreenProps = RootStackScreenProps<'HabitTimer'>;
 
@@ -95,7 +96,7 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
 
   const handleComplete = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = toLocalISODate();
       await dataService.markHabitProgress(habitId, today, 'done', {
         currentValue: Math.floor(targetTime / 60),
         targetValue: Math.floor(targetTime / 60),
@@ -138,6 +139,9 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pressable
             onPress={() => navigation.goBack()}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             style={{
               width: 36,
               height: 36,
@@ -152,6 +156,9 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
           <Text style={{ color: overlayText, fontSize: 14 }}>Focus mode</Text>
           <Pressable
             onPress={() => navigation.navigate('HabitDetails', { habitId })}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Habit details"
             style={{
               width: 36,
               height: 36,
@@ -250,6 +257,8 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
         >
           <Pressable
             onPress={handleReset}
+            accessibilityRole="button"
+            accessibilityLabel="Reset timer"
             style={{
               width: 56,
               height: 56,
@@ -264,6 +273,8 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
 
           <Pressable
             onPress={isRunning ? handlePause : handleStart}
+            accessibilityRole="button"
+            accessibilityLabel={isRunning ? 'Pause timer' : 'Start timer'}
             style={[
               {
                 width: 88,
@@ -287,6 +298,8 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
 
           <Pressable
             onPress={handleComplete}
+            accessibilityRole="button"
+            accessibilityLabel="Mark session complete"
             style={{
               width: 56,
               height: 56,

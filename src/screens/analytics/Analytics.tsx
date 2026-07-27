@@ -4,7 +4,7 @@ import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop, Line, Circl
 import { useNavigation } from '@react-navigation/native';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { useTheme } from '../../theme/ThemeContext';
-import { Screen, AppHeader, Card } from '../../components/ds';
+import { Screen, AppHeader, Card, useTabBarHeight } from '../../components/ds';
 
 const tint = (hex: string, ratio: number, bg: string): string => {
   const h = hex.replace('#', '');
@@ -55,22 +55,38 @@ const Sparkline: React.FC<{ data: number[]; color: string; width?: number; heigh
 const PERIODS = ['30d', '90d', '1y'] as const;
 type Period = (typeof PERIODS)[number];
 
+const PERIOD_DAYS: Record<Period, number> = { '30d': 30, '90d': 90, '1y': 365 };
+
 const Analytics: React.FC = () => {
   const t = useTheme();
+  const tabBarHeight = useTabBarHeight();
   const navigation = useNavigation<any>();
-  const { analyticsData, loading, refreshing, error, refresh } = useAnalytics();
   const [period, setPeriod] = useState<Period>('30d');
+  const { analyticsData, loading, refreshing, error, refresh } = useAnalytics(PERIOD_DAYS[period]);
 
-  const trendData = useMemo(() => {
-    const stats = analyticsData?.monthlyProgress ?? [];
-    if (stats.length === 0) return [40, 52, 48, 60, 58, 72, 68, 75, 80, 72, 84, 79, 86, 82, 88, 87];
-    return stats.map((d) => d.completionRate);
-  }, [analyticsData]);
+  // Real data only. A placeholder curve here reads as a genuine upward trend
+  // to someone who has not logged anything yet.
+  const trendData = useMemo(
+    () => (analyticsData?.periodProgress ?? []).map((d) => d.completionRate),
+    [analyticsData]
+  );
+
+  // Direction of travel, measured by comparing the two halves of the window
+  // rather than asserted as a constant "steady".
+  const trend = useMemo(() => {
+    if (trendData.length < 4) return null;
+    const mid = Math.floor(trendData.length / 2);
+    const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / (xs.length || 1);
+    const delta = mean(trendData.slice(mid)) - mean(trendData.slice(0, mid));
+    if (delta > 2) return { label: `↑ up ${Math.round(delta)}%`, color: t.colors.success };
+    if (delta < -2) return { label: `↓ down ${Math.round(-delta)}%`, color: t.colors.danger };
+    return { label: '→ steady', color: t.colors.ink3 };
+  }, [trendData, t.colors]);
 
   if (loading && !analyticsData) {
     return (
       <Screen>
-        <AppHeader title="Analytics" back onBack={() => navigation.goBack()} />
+        <AppHeader title="Analytics" />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={t.colors.primary} />
         </View>
@@ -93,13 +109,11 @@ const Analytics: React.FC = () => {
       <AppHeader
         title="Analytics"
         subtitle={`Last ${period === '30d' ? '30 days' : period === '90d' ? '90 days' : '12 months'}`}
-        back
-        onBack={() => navigation.goBack()}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={t.colors.ink3} />}
-        contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: 80 }}
+        contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: tabBarHeight + 24 }}
       >
         {/* 3-stat overview */}
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -146,9 +160,18 @@ const Analytics: React.FC = () => {
               <Text style={{ color: t.colors.ink, fontSize: 28, fontWeight: '700', letterSpacing: -0.6, marginTop: 4 }}>
                 {Math.round(analyticsData?.averageCompletionRate ?? 0)}%
               </Text>
-              <Text style={{ color: t.colors.success, fontSize: 12, fontWeight: '700', marginTop: 2 }}>
-                ↑ steady
-              </Text>
+              {trend && (
+                <Text
+                  style={{
+                    color: trend.color,
+                    fontSize: 12,
+                    fontWeight: '700',
+                    marginTop: 2,
+                  }}
+                >
+                  {trend.label}
+                </Text>
+              )}
             </View>
             <View
               style={{
@@ -165,6 +188,9 @@ const Analytics: React.FC = () => {
                   <Pressable
                     key={p}
                     onPress={() => setPeriod(p)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Period: ${p}`}
+                    accessibilityState={{ selected: a }}
                     style={{
                       paddingHorizontal: 10,
                       height: 30,
@@ -182,7 +208,15 @@ const Analytics: React.FC = () => {
           </View>
 
           <View style={{ marginTop: 10, marginHorizontal: -4 }}>
-            <Sparkline data={trendData} color={t.colors.primary} />
+            {trendData.length < 2 ? (
+              <View style={{ height: 84, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: t.colors.ink3, fontSize: 13, textAlign: 'center' }}>
+                  Not enough history yet — check back in a few days.
+                </Text>
+              </View>
+            ) : (
+              <Sparkline data={trendData} color={t.colors.primary} />
+            )}
           </View>
         </Card>
 

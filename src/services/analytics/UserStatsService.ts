@@ -1,5 +1,6 @@
 import { apiClient, API_CONFIG } from '../../constants/api';
 import { dataService } from '../core/DataService';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 export interface UserStats {
   completionRate: number;
@@ -102,10 +103,10 @@ class UserStatsService {
 
   private async calculatePerfectDays(): Promise<number> {
     try {
-      const endDate = new Date().toISOString().split('T')[0];
+      const endDate = toLocalISODate();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
-      const startDateStr = startDate.toISOString().split('T')[0];
+      const startDateStr = toLocalISODate(startDate);
 
       // Calculate perfect days manually since we don't have a bulk method yet
       let perfectDays = 0;
@@ -113,7 +114,7 @@ class UserStatsService {
       const end = new Date();
       
       while (currentDate <= end) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = toLocalISODate(currentDate);
         const dayStatsArray = await dataService.getDailyStats(dateStr, dateStr);
         const dayStats = dayStatsArray[0];
         
@@ -135,7 +136,7 @@ class UserStatsService {
     try {
       // TODO: Implement mood tracking storage
       // For now, return a sample mood based on cached stats to avoid recursion
-      const today = new Date().toISOString().split('T')[0];
+      const today = toLocalISODate();
       
       // Use cached stats if available, otherwise return neutral
       if (this.cachedStats) {
@@ -209,7 +210,7 @@ class UserStatsService {
     yesterday.setDate(yesterday.getDate() - 1);
     
     // Check if yesterday was completed
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = toLocalISODate(yesterday);
     const habits = await dataService.getHabits();
     
     let completedYesterday = 0;

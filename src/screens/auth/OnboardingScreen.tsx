@@ -178,7 +178,14 @@ const OnboardingScreen: React.FC = () => {
               {GOALS.map((g) => {
                 const sel = goals.includes(g.id);
                 return (
-                  <Pressable key={g.id} onPress={() => toggleGoal(g.id)} style={{ width: '48%' }}>
+                  <Pressable
+                    key={g.id}
+                    onPress={() => toggleGoal(g.id)}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={g.title}
+                    accessibilityState={{ checked: sel }}
+                    style={{ width: '48%' }}
+                  >
                     <Card
                       variant={sel ? 'elevated' : 'flat'}
                       padding={16}
@@ -219,7 +226,13 @@ const OnboardingScreen: React.FC = () => {
                   const sel = picked.includes(tmpl);
                   const c = tmpl.color || t.colors.primary;
                   return (
-                    <Pressable key={tmpl.title} onPress={() => togglePick(tmpl)}>
+                    <Pressable
+                      key={tmpl.title}
+                      onPress={() => togglePick(tmpl)}
+                      accessibilityRole="checkbox"
+                      accessibilityLabel={tmpl.title}
+                      accessibilityState={{ checked: sel }}
+                    >
                       <Card
                         variant="elevated"
                         padding={14}

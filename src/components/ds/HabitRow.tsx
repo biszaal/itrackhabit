@@ -53,8 +53,23 @@ export const HabitRow: React.FC<Props> = ({
 
   const iconBg = tint(accent, 0.14, t.colors.bgPaper);
 
+  // Screen readers get the habit, its target and where it stands — the visual
+  // row conveys all three at a glance, so the label should too.
+  const progressLabel = isDone
+    ? 'completed'
+    : partial
+    ? `${done} of ${total} done`
+    : 'not done yet';
+  const rowLabel = [name, target, progressLabel].filter(Boolean).join(', ');
+
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.96 : 1 }, style]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={rowLabel}
+      accessibilityHint="Opens habit details"
+      style={({ pressed }) => [{ opacity: pressed ? 0.96 : 1 }, style]}
+    >
       <View
         style={[
           {
@@ -132,16 +147,32 @@ export const HabitRow: React.FC<Props> = ({
 
         {/* trailing — check or partial */}
         {partial ? (
-          <View style={{ alignItems: 'flex-end' }}>
+          // Partially complete: still show the count, but keep it tappable —
+          // otherwise a half-finished habit can't be completed from the list.
+          <Pressable
+            onPress={onToggle}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={`Mark ${name} as done, currently ${done} of ${total}`}
+            style={{
+              minWidth: 44,
+              minHeight: 32,
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+            }}
+          >
             <Text style={{ fontSize: 13, fontWeight: '700', color: accent }}>
               {done}
               <Text style={{ color: t.colors.ink3, fontWeight: '500' }}>/{total}</Text>
             </Text>
-          </View>
+          </Pressable>
         ) : (
           <Pressable
             onPress={onToggle}
             hitSlop={8}
+            accessibilityRole="checkbox"
+            accessibilityLabel={`Mark ${name} as ${isDone ? 'not done' : 'done'}`}
+            accessibilityState={{ checked: isDone }}
             style={{
               width: 32,
               height: 32,

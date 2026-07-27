@@ -1,37 +1,28 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, Theme as NavTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator, View } from 'react-native';
 
-import { RootStackParamList, MainTabParamList, AuthStackParamList } from '../types/navigation';
-import { theme } from '../theme';
+import { RootStackParamList, MainTabParamList } from '../types/navigation';
+import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { NeumorphismColors, NeumorphTabBar } from '../components/neumorphism';
+import { TabBar } from '../components/ds';
 
 // Screens
 import { HomeScreen } from '../screens/HomeScreen';
 import { CalendarScreen } from '../screens/analytics/CalendarScreen';
-import { ChallengesScreen } from '../screens/social/ChallengesScreen';
-import { FriendsScreen } from '../screens/social/FriendsScreen';
 import { ProfileScreen } from '../screens/settings/ProfileScreen';
 import { CreateEditHabitScreen } from '../screens/habits/CreateEditHabitScreen';
 import { HabitTemplatesScreen } from '../screens/habits/HabitTemplatesScreen';
-import { WelcomeScreen } from '../screens/auth/WelcomeScreen';
 import { HabitDetailsScreen } from '../screens/habits/HabitDetailsScreen';
 import { HabitTimerScreen } from '../screens/habits/HabitTimerScreen';
 import { HabitConfigScreen } from '../screens/habits/HabitConfigScreen';
 import { HabitEditScreen } from '../screens/habits/HabitEditScreen';
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { RegisterScreen } from '../screens/auth/RegisterScreen';
-import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 import HabitNotificationSettingsScreen from '../screens/habits/HabitNotificationSettingsScreen';
-import { PremiumScreen } from '../screens/premium/PremiumScreen';
-import { ContactSelectionScreen } from '../screens/social/ContactSelectionScreen';
 import NotificationSettingsScreen from '../screens/settings/NotificationSettingsScreen';
 import Analytics from '../screens/analytics/Analytics';
+import { AIInsightsScreen } from '../screens/analytics/AIInsightsScreen';
 import AchievementsScreen from '../screens/premium/AchievementsScreen';
 import OnboardingScreen from '../screens/auth/OnboardingScreen';
 import { DataManagement } from '../screens/settings/DataManagement';
@@ -42,11 +33,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabNavigator() {
-  const insets = useSafeAreaInsets();
-  
   return (
     <Tab.Navigator
-      tabBar={(props) => <NeumorphTabBar {...props} />}
+      tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
         headerShown: false,
       }}
@@ -61,17 +50,17 @@ function MainTabNavigator() {
         component={CalendarScreen}
         options={{ title: 'Calendar' }}
       />
-      <Tab.Screen 
-        name="Challenges" 
-        component={ChallengesScreen}
-        options={{ title: 'Challenges' }}
+      <Tab.Screen
+        name="Analytics"
+        component={Analytics}
+        options={{ title: 'Analytics' }}
       />
-      <Tab.Screen 
-        name="Friends" 
-        component={FriendsScreen}
-        options={{ title: 'Friends' }}
+      <Tab.Screen
+        name="Achievements"
+        component={AchievementsScreen}
+        options={{ title: 'Awards' }}
       />
-      <Tab.Screen 
+      <Tab.Screen
         name="Profile" 
         component={ProfileScreen}
         options={{ title: 'Profile' }}
@@ -82,25 +71,41 @@ function MainTabNavigator() {
 
 
 export function RootNavigator() {
-  const { loading, isAuthenticated } = useAuth();
-  
+  const { loading } = useAuth();
+  const t = useTheme();
+
+  // Keep the navigator's own chrome (card backgrounds, transition scenes) on
+  // the same palette the screens use, so switching to dark mode doesn't flash
+  // a light background between screens.
+  const navTheme: NavTheme = {
+    ...(t.isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(t.isDark ? DarkTheme : DefaultTheme).colors,
+      background: t.colors.bg,
+      card: t.colors.bgElev,
+      text: t.colors.ink,
+      border: t.colors.line,
+      primary: t.colors.primary,
+    },
+  };
+
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: NeumorphismColors.background, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={{ flex: 1, backgroundColor: t.colors.bg, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={t.colors.primary} />
       </View>
     );
   }
-  
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       <Stack.Navigator
         screenOptions={{
           // Every redesigned screen renders its own in-page AppHeader,
           // so we suppress the native stack header globally to avoid a
           // duplicated title strip on top.
           headerShown: false,
-          contentStyle: { backgroundColor: NeumorphismColors.background },
+          contentStyle: { backgroundColor: t.colors.bg },
         }}
       >
         {/* Main App - Always accessible */}
@@ -176,18 +181,10 @@ export function RootNavigator() {
           }}
         />
         <Stack.Screen
-          name="Analytics"
-          component={Analytics}
+          name="AIInsights"
+          component={AIInsightsScreen}
           options={{
-            title: 'Analytics',
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="Achievements"
-          component={AchievementsScreen}
-          options={{
-            title: 'Achievements',
+            title: 'AI Insights',
             headerShown: false,
           }}
         />
@@ -200,51 +197,13 @@ export function RootNavigator() {
           }}
         />
         <Stack.Screen
-          name="Premium"
-          component={PremiumScreen}
-          options={{
-            title: 'Premium',
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="ChallengeDetails"
-          component={ChallengesScreen as any}
-          options={{
-            title: 'Challenge Details',
-          }}
-        />
-        <Stack.Screen
-          name="CreateChallenge"
-          component={ChallengesScreen as any}
-          options={{
-            title: 'Create Challenge',
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="FriendProfile"
-          component={ProfileScreen as any}
-          options={{
-            title: 'Friend Profile',
-          }}
-        />
-        <Stack.Screen
           name="Settings"
           component={ProfileScreen as any}
           options={{
             title: 'Settings',
           }}
         />
-        <Stack.Screen
-          name="ContactSelection"
-          component={ContactSelectionScreen}
-          options={{
-            title: 'Invite Friends',
-            headerShown: false,
-          }}
-        />
-        
+
         {/* Settings Screens */}
         <Stack.Screen
           name="NotificationSettingsNew"
@@ -270,48 +229,16 @@ export function RootNavigator() {
             headerShown: false,
           }}
         />
-        <Stack.Screen
-          name="DeveloperTools"
-          component={DeveloperToolsScreen}
-          options={{
-            title: 'Developer Tools',
-            headerShown: false,
-          }}
-        />
-        
-        {/* Optional Auth Screens */}
-        <Stack.Screen
-          name="Welcome"
-          component={WelcomeScreen}
-          options={{
-            title: 'Welcome',
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{
-            title: 'Sign In',
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{
-            title: 'Create Account',
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="ForgotPassword"
-          component={ForgotPasswordScreen}
-          options={{
-            title: 'Reset Password',
-            headerShown: false,
-          }}
-        />
+        {__DEV__ && (
+          <Stack.Screen
+            name="DeveloperTools"
+            component={DeveloperToolsScreen}
+            options={{
+              title: 'Developer Tools',
+              headerShown: false,
+            }}
+          />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

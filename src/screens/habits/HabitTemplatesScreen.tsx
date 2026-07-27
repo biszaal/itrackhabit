@@ -55,6 +55,8 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
         action={
           <Pressable
             onPress={() => navigation.navigate('CreateEditHabit', {})}
+            accessibilityRole="button"
+            accessibilityLabel="Create a custom habit"
             hitSlop={8}
             style={[
               {
@@ -86,6 +88,9 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
               <Pressable
                 key={c.id}
                 onPress={() => setCategory(c.id)}
+                accessibilityRole="button"
+                accessibilityLabel={c.label ?? c.id}
+                accessibilityState={{ selected: category === c.id }}
                 style={{
                   height: 36,
                   paddingHorizontal: 14,
@@ -117,7 +122,12 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
             </Card>
           ) : (
             templates.map((tmpl) => (
-              <Pressable key={tmpl.id} onPress={() => pick(tmpl)}>
+              <Pressable
+                key={tmpl.id}
+                onPress={() => pick(tmpl)}
+                accessibilityRole="button"
+                accessibilityLabel={`Use template `}
+              >
                 <Card variant="elevated" padding={14}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <View

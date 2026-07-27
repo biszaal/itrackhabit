@@ -4,8 +4,16 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/AuthContext';
-import { ThemeProvider } from './src/theme/ThemeContext';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { RootNavigator } from './src/navigation';
+
+// Single source of truth for the status bar. `style="auto"` follows the OS
+// scheme, which is wrong whenever the user has overridden the theme in-app
+// (system light + app set to dark would render dark-on-dark text).
+function ThemedStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} translucent />;
+}
 
 export default function App() {
   return (
@@ -14,7 +22,7 @@ export default function App() {
         <ThemeProvider>
           <AuthProvider>
             <RootNavigator />
-            <StatusBar style="auto" />
+            <ThemedStatusBar />
           </AuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>

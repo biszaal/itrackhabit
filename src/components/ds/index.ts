@@ -10,7 +10,7 @@ export { FAB } from './FAB';
 export { Stat } from './Stat';
 export { Heat, HeatGrid } from './Heat';
 export { WeekDots } from './WeekDots';
-export { TabBar } from './TabBar';
+export { TabBar, useTabBarHeight } from './TabBar';
 export { OfflinePill } from './OfflinePill';
 export { OfflineNotice } from './OfflineNotice';
 export { Field } from './Field';

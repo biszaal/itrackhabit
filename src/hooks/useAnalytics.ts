@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '../services/core';
 import { DailyStats, HabitWithStats } from '../types';
+import { toLocalISODate } from '../utils/formatting/time';
 
 export interface AnalyticsData {
   totalHabits: number;
@@ -9,11 +10,18 @@ export interface AnalyticsData {
   averageCompletionRate: number;
   weeklyProgress: DailyStats[];
   monthlyProgress: DailyStats[];
+  /** Daily stats over the caller's requested window (see `periodDays`). */
+  periodProgress: DailyStats[];
   habitStats: HabitWithStats[];
   categoryDistribution: { [key: string]: number };
 }
 
-export const useAnalytics = () => {
+/**
+ * @param periodDays Size of the trend window to fetch. The caller's period
+ *   selector must drive this — otherwise switching periods only relabels a
+ *   chart that keeps showing the same 30 days.
+ */
+export const useAnalytics = (periodDays: number = 30) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -21,15 +29,15 @@ export const useAnalytics = () => {
 
   const calculateDateRanges = useCallback(() => {
     const today = new Date();
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
+    const daysAgo = (n: number) => new Date(today.getTime() - n * 24 * 60 * 60 * 1000);
+
     return {
-      today: today.toISOString().split('T')[0],
-      weekAgo: weekAgo.toISOString().split('T')[0],
-      monthAgo: monthAgo.toISOString().split('T')[0],
+      today: toLocalISODate(today),
+      weekAgo: toLocalISODate(daysAgo(7)),
+      monthAgo: toLocalISODate(daysAgo(30)),
+      periodAgo: toLocalISODate(daysAgo(periodDays)),
     };
-  }, []);
+  }, [periodDays]);
 
   const calculateCategoryDistribution = useCallback((habits: any[]) => {
     const categoryDistribution: { [key: string]: number } = {};
@@ -57,13 +65,14 @@ export const useAnalytics = () => {
       const habits = await dataService.getHabitsWithStats();
       const activeHabits = habits.filter((h: any) => !h.deletedAt);
       
-      const { today, weekAgo, monthAgo } = calculateDateRanges();
-      
-      const [weeklyProgress, monthlyProgress] = await Promise.all([
+      const { today, weekAgo, monthAgo, periodAgo } = calculateDateRanges();
+
+      const [weeklyProgress, monthlyProgress, periodProgress] = await Promise.all([
         dataService.getDailyStats(weekAgo, today),
-        dataService.getDailyStats(monthAgo, today)
+        dataService.getDailyStats(monthAgo, today),
+        dataService.getDailyStats(periodAgo, today),
       ]);
-      
+
       const categoryDistribution = calculateCategoryDistribution(activeHabits);
       const { totalStreaks, averageCompletionRate } = calculateAggregateStats(activeHabits);
       
@@ -74,6 +83,7 @@ export const useAnalytics = () => {
         averageCompletionRate,
         weeklyProgress,
         monthlyProgress,
+        periodProgress,
         habitStats: activeHabits,
         categoryDistribution
       });

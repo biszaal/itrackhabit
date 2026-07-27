@@ -19,6 +19,12 @@ interface Props {
   textStyle?: TextStyle;
   children?: React.ReactNode;
   iconOnly?: boolean;
+  /**
+   * Screen-reader name. Required in practice for `iconOnly` buttons, which
+   * have no text to fall back on.
+   */
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 export const Button: React.FC<Props> = ({
@@ -35,6 +41,8 @@ export const Button: React.FC<Props> = ({
   textStyle,
   children,
   iconOnly,
+  accessibilityLabel,
+  accessibilityHint,
 }) => {
   const t = useTheme();
 
@@ -88,6 +96,10 @@ export const Button: React.FC<Props> = ({
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       style={({ pressed }) => [base, shadow, pressed && { opacity: 0.85 }, style]}
     >
       {loading ? (

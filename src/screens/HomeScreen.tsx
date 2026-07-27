@@ -6,6 +6,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Pressable,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { useSmartNotifications } from '../hooks/useSmartNotifications';
+import { toLocalISODate } from '../utils/formatting/time';
 import {
   Screen,
   Card,
@@ -26,6 +28,7 @@ import {
   WeekDots,
   OfflinePill,
   Button,
+  useTabBarHeight,
 } from '../components/ds';
 
 type HomeScreenProps = MainTabScreenProps<'Home'>;
@@ -59,17 +62,31 @@ const emojiFor = (title: string): string => {
 const formatDateLong = (d: Date) =>
   d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
+
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
   const { user } = useAuth();
   const { recordActivity } = useSmartNotifications();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [habits, setHabits] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  // Progress records for `selectedDate`, keyed by habit id. Empty for today
+  // until loaded — today falls back to the habit's own `isDoneToday`.
+  const [dayProgress, setDayProgress] = useState<Record<string, any>>({});
   const [, setTick] = useState(0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isToday = selectedDate.toDateString() === today.toDateString();
+  const selectedISO = toLocalISODate(selectedDate);
 
   // Re-render once a second so timer-driven progress stays live
   useEffect(() => {
@@ -90,9 +107,39 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   }, []);
 
+  // Progress for whichever day is selected. Without this the date strip is
+  // decorative — tapping a past day would just move the highlight.
+  const loadDayProgress = useCallback(
+    async (date: string, list: any[]) => {
+      if (list.length === 0) {
+        setDayProgress({});
+        return;
+      }
+      try {
+        const entries = await Promise.all(
+          list.map(async (h) => {
+            const record = await dataService
+              .getHabitProgressForDate(h.id, date)
+              .catch(() => null);
+            return [h.id, record] as const;
+          })
+        );
+        setDayProgress(Object.fromEntries(entries));
+      } catch (err) {
+        console.warn('Failed to load progress for', date, err);
+        setDayProgress({});
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    loadDayProgress(selectedISO, habits);
+  }, [selectedISO, habits, loadDayProgress]);
 
   useFocusEffect(
     useCallback(() => {
@@ -109,14 +156,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const isToday = selectedDate.toDateString() === today.toDateString();
-
   const computeProgress = (habit: any) => {
     const target = habit.targetConfig?.targetValue ?? 1;
     const isTimeBased = habit.targetConfig?.isTimeBased ?? false;
-    let current = habit.currentProgress?.currentValue ?? 0;
+    const record = dayProgress[habit.id];
+
+    // For today we can trust the habit's own rollup as a fallback; for any
+    // other day the stored record is the only source of truth.
+    let current = isToday
+      ? habit.currentProgress?.currentValue ?? 0
+      : record?.currentValue ?? 0;
+
+    if (record) {
+      current = record.status === 'done' ? target : record.currentValue ?? 0;
+    }
 
     const activeTimer = timerService.getTimer?.(habit.id);
     if (activeTimer && isTimeBased && isToday) {
@@ -127,11 +180,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         current = Math.max(current, m);
       }
     }
-    if (habit.isDoneToday) current = target;
+    if (isToday && habit.isDoneToday) current = target;
     return { current, target, isTimeBased };
   };
 
-  const completed = habits.filter((h) => h.isDoneToday).length;
+  const isHabitDone = (habit: any): boolean => {
+    const record = dayProgress[habit.id];
+    if (record) return record.status === 'done';
+    return isToday ? !!habit.isDoneToday : false;
+  };
+
+  const completed = habits.filter(isHabitDone).length;
   const totalCount = habits.length;
   const pct = totalCount > 0 ? completed / totalCount : 0;
   const pctLabel = Math.round(pct * 100);
@@ -145,13 +204,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   const handleToggleHabit = async (habit: any) => {
+    // Write against the day the user is actually looking at.
+    const newStatus = isHabitDone(habit) ? 'skipped' : 'done';
+    const previous = dayProgress[habit.id];
+
+    // Optimistic: the checkbox should respond to the tap immediately rather
+    // than after a round trip through storage.
+    setDayProgress((prev) => ({
+      ...prev,
+      [habit.id]: { ...(previous ?? {}), status: newStatus, date: selectedISO },
+    }));
+
     try {
-      const newStatus = habit.isDoneToday ? 'skipped' : 'done';
-      const today = new Date().toISOString().split('T')[0];
-      await dataService.markHabitProgress(habit.id, today, newStatus);
+      const saved = await dataService.markHabitProgress(habit.id, selectedISO, newStatus);
+      setDayProgress((prev) => ({ ...prev, [habit.id]: saved }));
       await loadData();
     } catch (e) {
       console.warn('toggle failed', e);
+      // Roll back so the UI never claims a state that was not persisted.
+      setDayProgress((prev) => ({ ...prev, [habit.id]: previous }));
+      Alert.alert('Sorry', 'Could not save your progress. Try again.');
     }
   };
 
@@ -165,7 +237,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <Screen>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 140 }}
+        // Clear the tab bar *and* the FAB that floats above it, so the last
+        // habit row can always be scrolled into view and tapped.
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -191,9 +265,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               marginBottom: 14,
             }}
           >
-            <OfflinePill label="Synced just now" />
+            <OfflinePill />
             <Pressable
+              onPress={() => navigation.navigate('NotificationSettingsNew')}
               hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Notification settings"
               style={{
                 width: 36,
                 height: 36,
@@ -209,7 +286,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: t.colors.ink2, fontSize: 13 }}>{formatDateLong(today)}</Text>
+              <Text style={{ color: t.colors.ink2, fontSize: 13 }}>
+                {formatDateLong(selectedDate)}
+              </Text>
               <Text
                 style={{
                   color: t.colors.ink,
@@ -291,7 +370,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   letterSpacing: 0.6,
                 }}
               >
-                today
+                {isToday ? 'today' : 'that day'}
               </Text>
             </Ring>
 
@@ -331,7 +410,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   letterSpacing: -0.4,
                 }}
               >
-                Today's habits
+                {isToday ? "Today's habits" : 'Habits'}
               </Text>
               <Text style={{ color: t.colors.ink3, fontSize: 12, fontWeight: '600' }}>
                 {totalCount} total

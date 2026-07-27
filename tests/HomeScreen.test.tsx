@@ -1,6 +1,7 @@
 import React from "react";
-import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { NavigationContainer } from "@react-navigation/native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { HomeScreen } from "../src/screens/HomeScreen";
 import { useAuth } from "../src/contexts/AuthContext";
 import { dataService } from "../src/services/core/DataService";
@@ -37,7 +38,6 @@ const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockDataService = dataService as jest.Mocked<typeof dataService>;
 const mockTimerService = timerService as jest.Mocked<typeof timerService>;
 
-// Mock navigation
 const mockNavigation = {
   navigate: jest.fn(),
   goBack: jest.fn(),
@@ -47,14 +47,26 @@ const mockRoute = {
   params: {},
 };
 
-// Helper function to render HomeScreen with NavigationContainer
-const renderHomeScreen = (props = {}) => {
-  return render(
-    <NavigationContainer>
-      <HomeScreen navigation={mockNavigation} route={mockRoute} {...props} />
-    </NavigationContainer>
-  );
+// HomeScreen calls useSafeAreaInsets, which needs a provider with metrics —
+// there is no real window to measure in the test renderer.
+const initialMetrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
 };
+
+const renderHomeScreen = (props = {}) =>
+  render(
+    <SafeAreaProvider initialMetrics={initialMetrics}>
+      <NavigationContainer>
+        {/* Partial navigation/route stubs — HomeScreen only uses navigate. */}
+        <HomeScreen
+          navigation={mockNavigation as any}
+          route={mockRoute as any}
+          {...props}
+        />
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
 
 describe("HomeScreen", () => {
   const mockHabits = [
@@ -71,7 +83,7 @@ describe("HomeScreen", () => {
       },
       isDoneToday: false,
       currentProgress: null,
-      completionStatus: "not_done",
+      currentStreak: 0,
     },
     {
       id: "habit2",
@@ -93,7 +105,7 @@ describe("HomeScreen", () => {
         currentValue: 30,
         targetValue: 30,
       },
-      completionStatus: "done",
+      currentStreak: 4,
     },
   ];
 
@@ -101,100 +113,99 @@ describe("HomeScreen", () => {
     jest.clearAllMocks();
 
     mockUseAuth.mockReturnValue({
-      user: { id: "user123", email: "test@example.com" },
+      user: { id: "user123", name: "Sam Rivers", email: "test@example.com" },
       loading: false,
       isAuthenticated: true,
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-    });
+    } as any);
 
-    mockDataService.initialize.mockResolvedValue();
-    mockDataService.getHabits.mockResolvedValue(mockHabits);
-    mockDataService.getHabitProgressForDate.mockResolvedValue(null);
-    mockTimerService.getTimer.mockReturnValue(null);
+    // HomeScreen loads through getUserData, not getHabits.
+    mockDataService.getUserData.mockResolvedValue({ habits: mockHabits } as any);
+    mockDataService.markHabitProgress.mockResolvedValue({} as any);
+    mockTimerService.getTimer.mockReturnValue(null as any);
   });
 
-  it("should render greeting and date", async () => {
-    // Act
+  it("greets the user by first name", async () => {
     const { getByText } = renderHomeScreen();
 
-    // Assert
+    // The greeting and name share one <Text>, so match the composed string.
     await waitFor(() => {
-      expect(getByText(/Good (morning|afternoon|evening)!/)).toBeTruthy();
-      expect(getByText(/Today/)).toBeTruthy();
+      expect(getByText(/Good (morning|afternoon|evening),\s*Sam\./)).toBeTruthy();
     });
   });
 
-  it("should display habits list", async () => {
-    // Act
+  it("displays the habits list", async () => {
     const { getByText } = renderHomeScreen();
 
-    // Assert
     await waitFor(() => {
       expect(getByText("Exercise 30 min")).toBeTruthy();
       expect(getByText("Meditate 30 min")).toBeTruthy();
     });
   });
 
-  it("should show progress percentage", async () => {
-    // Act
-    const { getByText } = renderHomeScreen();
-
-    // Assert
-    await waitFor(() => {
-      expect(getByText("0%")).toBeTruthy(); // 0 out of 2 habits completed
-      expect(getByText("0/2")).toBeTruthy();
-    });
-  });
-
-  it("should handle habit press", async () => {
-    // Act
+  it("shows today's completion progress", async () => {
     const { getByText } = renderHomeScreen();
 
     await waitFor(() => {
-      const habitCard = getByText("Exercise 30 min");
-      fireEvent.press(habitCard);
-    });
-
-    // Assert
-    expect(mockNavigation.navigate).toHaveBeenCalledWith("HabitTimer", {
-      habitId: "habit1",
+      // one of two habits done
+      expect(getByText("1 of 2 done")).toBeTruthy();
+      // the ring label renders the number and "%" as sibling nodes
+      expect(getByText(/^50\s*%$/)).toBeTruthy();
     });
   });
 
-  it("should show loading state initially", () => {
-    // Arrange
-    mockDataService.getHabits.mockImplementation(() => new Promise(() => {})); // Never resolves
-
-    // Act
+  it("shows the best current streak", async () => {
     const { getByText } = renderHomeScreen();
 
-    // Assert
-    expect(getByText("Loading...")).toBeTruthy();
-  });
-
-  it("should display correct emoji for habits", async () => {
-    // Act
-    const { getByText } = renderHomeScreen();
-
-    // Assert
     await waitFor(() => {
-      expect(getByText("💪")).toBeTruthy(); // Exercise emoji
-      expect(getByText("🧘")).toBeTruthy(); // Meditation emoji
+      expect(getByText("4")).toBeTruthy();
     });
   });
 
-  it("should handle empty habits list", async () => {
-    // Arrange
-    mockDataService.getHabits.mockResolvedValue([]);
-
-    // Act
+  it("opens habit details when a habit is pressed", async () => {
     const { getByText } = renderHomeScreen();
 
-    // Assert
+    await waitFor(() => expect(getByText("Exercise 30 min")).toBeTruthy());
+    fireEvent.press(getByText("Exercise 30 min"));
+
     await waitFor(() => {
-      expect(getByText("0")).toBeTruthy(); // Habit count should be 0
+      expect(mockNavigation.navigate).toHaveBeenCalledWith("HabitDetails", {
+        habitId: "habit1",
+      });
+    });
+  });
+
+  it("shows the empty state when there are no habits", async () => {
+    mockDataService.getUserData.mockResolvedValue({ habits: [] } as any);
+
+    const { getByText } = renderHomeScreen();
+
+    await waitFor(() => {
+      expect(getByText("No habits yet — start with one.")).toBeTruthy();
+      expect(getByText("Create a habit")).toBeTruthy();
+    });
+  });
+
+  it("routes to templates from the empty state", async () => {
+    mockDataService.getUserData.mockResolvedValue({ habits: [] } as any);
+
+    const { getByText } = renderHomeScreen();
+
+    await waitFor(() => expect(getByText("Create a habit")).toBeTruthy());
+    fireEvent.press(getByText("Create a habit"));
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith("HabitTemplates");
+  });
+
+  it("falls back to an empty list when loading fails", async () => {
+    mockDataService.getUserData.mockRejectedValue(new Error("db unavailable"));
+
+    const { getByText } = renderHomeScreen();
+
+    await waitFor(() => {
+      expect(getByText("No habits yet — start with one.")).toBeTruthy();
     });
   });
 });

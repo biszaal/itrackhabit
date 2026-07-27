@@ -87,10 +87,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
       } else {
         const result = await dataService.createHabit(habitData);
         if ((result as any)?.blocked) {
-          Alert.alert('Free limit reached', (result as any).reason ?? 'Upgrade to add more habits.', [
-            { text: 'Maybe later', style: 'cancel' },
-            { text: 'See Premium', onPress: () => navigation.navigate('Premium' as any) },
-          ]);
+          // No habit cap in v1, so this should not trigger — surface the
+          // reason rather than pointing at a paywall that no longer exists.
+          Alert.alert('Could not create habit', (result as any).reason ?? 'Please try again.');
         } else {
           navigation.goBack();
         }
@@ -164,6 +163,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                 <Pressable
                   key={e}
                   onPress={() => setEmoji(e)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Emoji ${e}`}
+                  accessibilityState={{ selected: emoji === e }}
                   style={{
                     width: 56,
                     height: 56,
@@ -190,6 +192,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                 <Pressable
                   key={c}
                   onPress={() => setColor(c)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Habit color"
+                  accessibilityState={{ selected: color === c }}
                   style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', position: 'relative' }}
                 >
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: c }} />
@@ -219,6 +224,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                 <Pressable
                   key={c.label}
                   onPress={() => setCategory(active ? null : c.label)}
+                  accessibilityRole="button"
+                  accessibilityLabel={c.label}
+                  accessibilityState={{ selected: active }}
                   style={{
                     height: 32,
                     paddingHorizontal: 12,
@@ -245,6 +253,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                 <Pressable
                   key={f.value}
                   onPress={() => setFrequency(f.value)}
+                  accessibilityRole="button"
+                  accessibilityLabel={f.label}
+                  accessibilityState={{ selected: frequency === f.value }}
                   style={{
                     flex: 1,
                     height: 36,
@@ -265,6 +276,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
           <View style={{ flexDirection: 'row', padding: 4, gap: 4, backgroundColor: t.colors.bgPaper, borderRadius: 14 }}>
             <Pressable
               onPress={() => setIsTimeBased(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Count based goal"
+              accessibilityState={{ selected: !isTimeBased }}
               style={{
                 flex: 1,
                 height: 36,
@@ -281,6 +295,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
             </Pressable>
             <Pressable
               onPress={() => setIsTimeBased(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Time based goal"
+              accessibilityState={{ selected: isTimeBased }}
               style={{
                 flex: 1,
                 height: 36,
@@ -302,6 +319,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Pressable
               onPress={() => setTargetValue(Math.max(1, targetValue - 1))}
+              accessibilityRole="button"
+              accessibilityLabel="Decrease target"
+
               style={{ width: 44, height: 52, borderRadius: 14, backgroundColor: t.colors.bgPaper, alignItems: 'center', justifyContent: 'center' }}
             >
               <Ionicons name="remove" size={20} color={t.colors.ink} />
@@ -323,6 +343,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
             </View>
             <Pressable
               onPress={() => setTargetValue(targetValue + 1)}
+              accessibilityRole="button"
+              accessibilityLabel="Increase target"
+
               style={{ width: 44, height: 52, borderRadius: 14, backgroundColor: t.colors.bgPaper, alignItems: 'center', justifyContent: 'center' }}
             >
               <Ionicons name="add" size={20} color={t.colors.ink} />
@@ -334,6 +357,9 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                 <Pressable
                   key={u}
                   onPress={() => setTargetUnit(u)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Unit: ${u}`}
+                  accessibilityState={{ selected: targetUnit === u }}
                   style={{
                     height: 28,
                     paddingHorizontal: 12,

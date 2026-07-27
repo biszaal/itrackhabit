@@ -2,6 +2,7 @@ import { NotificationService, NotificationTemplates } from './NotificationServic
 import { dataService } from '../core';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 export interface NotificationPreferences {
   enabled: boolean;
@@ -258,7 +259,7 @@ export class SmartNotificationService {
    */
   async scheduleHabitNotifications(habit: any): Promise<void> {
     const preferences = await this.loadUserPreferences();
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalISODate();
     
     try {
       // Get habit progress for context

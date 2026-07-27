@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HabitWithStats, HabitProgressStatus } from '../../types';
+import { HabitWithStats, HabitProgressStatus, HabitProgress as Progress } from '../../types';
 import { RootStackScreenProps } from '../../types/navigation';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, Card, Button, Stat, HeatGrid, Chip } from '../../components/ds';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 type HabitDetailsScreenProps = RootStackScreenProps<'HabitDetails'>;
 
@@ -44,6 +45,10 @@ interface Note {
   text?: string;
 }
 
+// 8 rows x 7 cols of the heat grid.
+const HEAT_DAYS = 56;
+
+
 export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigation, route }) => {
   const t = useTheme();
   const insets = useSafeAreaInsets();
@@ -53,6 +58,8 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [progress, setProgress] = useState<Progress[]>([]);
 
   const accent = habit?.color || t.colors.primary;
   const isDayOne = (habit?.totalCompletions ?? 0) === 0 && (habit?.currentStreak ?? 0) === 0;
@@ -63,13 +70,30 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
       setLoading(true);
       setError(null);
       try {
-        const data = await dataService.getUserData();
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - (HEAT_DAYS - 1));
+
+        const [data, records] = await Promise.all([
+          dataService.getUserData(),
+          dataService
+            .getHabitProgress(habitId, toLocalISODate(start), toLocalISODate(new Date()))
+            .catch(() => [] as Progress[]),
+        ]);
+
         const found = (data.habits ?? []).find((h: any) => h.id === habitId);
         if (cancelled) return;
         if (!found) {
           setError('not_found');
         } else {
           setHabit(found as HabitWithStats);
+          setProgress(records);
+          setNotes(
+            records
+              .filter((r) => (r.notes ?? '').trim().length > 0)
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .map((r) => ({ date: r.date, status: r.status, text: r.notes }))
+          );
         }
       } catch (e) {
         if (!cancelled) setError('load_failed');
@@ -86,24 +110,66 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
+  // Intensity 0..4 for one day's record. `done` is full strength; a partial
+  // entry scales by how much of the target was met so the grid distinguishes
+  // "barely started" from "nearly there".
+  const intensityFor = (p: Progress | undefined): number => {
+    if (!p) return 0;
+    if (p.status === 'done') return 4;
+    if (p.status === 'partial') {
+      const target = p.targetValue ?? 0;
+      const current = p.currentValue ?? 0;
+      if (target <= 0) return 2;
+      const ratio = Math.max(0, Math.min(1, current / target));
+      return Math.min(3, Math.max(1, Math.round(ratio * 4)));
+    }
+    return 0; // skipped or no record
+  };
+
   const heatData = useMemo(() => {
-    // Synthetic heatmap until backend progress wiring is plumbed through.
-    const total = 8 * 7;
-    return Array.from({ length: total }, (_, i) => {
-      const v = (Math.sin(i * 0.7) + Math.cos(i * 0.3) + 2) * 1.1;
-      return Math.max(0, Math.min(4, Math.floor(v)));
+    const byDate = new Map(progress.map((p) => [p.date, p]));
+    // 8 rows x 7 cols, oldest first, ending on today (last cell).
+    return Array.from({ length: HEAT_DAYS }, (_, i) => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - (HEAT_DAYS - 1 - i));
+      return intensityFor(byDate.get(toLocalISODate(d)));
     });
-  }, [habitId]);
+  }, [progress]);
 
   const handleEdit = () => {
     navigation.navigate('EditHabit', { habitId });
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete habit?',
+      `"${habit?.title ?? 'This habit'}" and its history will be removed. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeleting(true);
+              await dataService.deleteHabit(habitId);
+              navigation.goBack();
+            } catch {
+              setDeleting(false);
+              Alert.alert('Sorry', 'Could not delete this habit. Try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleMoreMenu = () => {
     Alert.alert(habit?.title ?? 'Habit', undefined, [
       { text: 'Edit', onPress: handleEdit },
       { text: 'Start timer', onPress: () => navigation.navigate('HabitTimer', { habitId }) },
-      { text: 'Delete', style: 'destructive', onPress: () => Alert.alert('Delete', 'Not implemented yet.') },
+      { text: 'Delete', style: 'destructive', onPress: handleDelete },
       { text: 'Cancel', style: 'cancel' },
     ]);
   };
@@ -111,7 +177,7 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
   const handleMarkComplete = async () => {
     if (!habit) return;
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = toLocalISODate();
       await dataService.markHabitProgress(habit.id, today, 'done');
       setHabit({ ...habit, isDoneToday: true });
     } catch {
@@ -130,6 +196,9 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
         <View style={{ paddingTop: insets.top + 16, paddingHorizontal: t.spacing.screen }}>
           <Pressable
             onPress={() => navigation.goBack()}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             style={{
               width: 36,
               height: 36,
@@ -156,6 +225,9 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
         <View style={{ paddingTop: insets.top + 16, paddingHorizontal: t.spacing.screen }}>
           <Pressable
             onPress={() => navigation.goBack()}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             style={{
               width: 36,
               height: 36,
@@ -225,6 +297,9 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
           >
             <Pressable
               onPress={() => navigation.goBack()}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
               style={{
                 width: 36,
                 height: 36,
@@ -239,6 +314,9 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <Pressable
                 onPress={handleEdit}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Edit habit"
                 style={{
                   width: 36,
                   height: 36,
@@ -252,6 +330,11 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
               </Pressable>
               <Pressable
                 onPress={handleMoreMenu}
+                disabled={deleting}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="More options"
+                accessibilityState={{ disabled: deleting }}
                 style={{
                   width: 36,
                   height: 36,
@@ -259,6 +342,7 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
                   backgroundColor: t.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  opacity: deleting ? 0.5 : 1,
                 }}
               >
                 <Ionicons name="ellipsis-horizontal" size={18} color={t.colors.ink2} />
@@ -393,7 +477,7 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
                   <Text style={{ fontSize: 11, fontWeight: '600', color: t.colors.ink3 }}>more</Text>
                 </View>
               </View>
-              <HeatGrid rows={8} cols={7} data={heatData} todayIdx={55} color={accent} />
+              <HeatGrid rows={8} cols={7} data={heatData} todayIdx={HEAT_DAYS - 1} color={accent} />
             </Card>
           )}
 

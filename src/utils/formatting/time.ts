@@ -24,6 +24,20 @@ export const formatDuration = (seconds: number): string => {
   return `${minutes}m`;
 };
 
+/**
+ * Calendar date as YYYY-MM-DD in the device's own timezone.
+ *
+ * Use this instead of `date.toISOString().split('T')[0]` for anything that
+ * represents a *day* rather than an instant. toISOString() converts to UTC
+ * first, so for any user east of UTC a local midnight lands on the previous
+ * UTC day — e.g. in Sydney (UTC+11) `new Date()` at 09:00 on the 15th
+ * serialises as "…-14". That silently files progress under the wrong day.
+ */
+export const toLocalISODate = (date: Date = new Date()): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
 export const formatDate = (date: Date): string => {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',

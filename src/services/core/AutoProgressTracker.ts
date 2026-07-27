@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { healthService } from '../health/HealthService';
 import { Habit, HabitProgress, HealthMetricType } from '../../types';
 import { HealthDataType } from '../../types/health';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 interface AutoTrackingConfig {
   habitId: string;
@@ -74,7 +75,7 @@ class AutoProgressTracker {
   async checkAndUpdateProgress(): Promise<HabitProgress[]> {
     const updatedProgress: HabitProgress[] = [];
     const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+    const todayString = toLocalISODate(today);
 
     for (const config of Array.from(this.autoTrackingConfigs.values())) {
       try {
@@ -146,7 +147,7 @@ class AutoProgressTracker {
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const dateString = currentDate.toISOString().split('T')[0];
+      const dateString = toLocalISODate(currentDate);
       const dailyProgress = await this.checkHabitProgress(config, dateString);
       
       if (dailyProgress) {

@@ -5,6 +5,7 @@ import { Alert } from 'react-native';
 import { dataService } from './DataService';
 import { achievementService } from '../premium/AchievementService';
 import { Habit, HabitProgress } from '../../types';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 export interface ExportedData {
   version: string;
@@ -95,7 +96,7 @@ class DataExportService {
       };
       
       // Create filename with timestamp
-      const timestamp = new Date().toISOString().split('T')[0];
+      const timestamp = toLocalISODate();
       const filename = `iTrackHabit_backup_${timestamp}.json`;
       const filePath = `${FileSystem.documentDirectory}${filename}`;
       
@@ -155,7 +156,7 @@ class DataExportService {
       const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
       
       // Create filename
-      const timestamp = new Date().toISOString().split('T')[0];
+      const timestamp = toLocalISODate();
       const filename = `iTrackHabit_habits_${timestamp}.csv`;
       const filePath = `${FileSystem.documentDirectory}${filename}`;
       
@@ -224,7 +225,7 @@ class DataExportService {
       const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
       
       // Create filename
-      const timestamp = new Date().toISOString().split('T')[0];
+      const timestamp = toLocalISODate();
       const filename = `iTrackHabit_progress_${timestamp}.csv`;
       const filePath = `${FileSystem.documentDirectory}${filename}`;
       

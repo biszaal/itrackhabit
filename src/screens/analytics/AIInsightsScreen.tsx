@@ -21,6 +21,9 @@ const SegTab: React.FC<{ active: boolean; label: string; onPress: () => void }> 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
       style={{
         flex: 1,
         height: 36,

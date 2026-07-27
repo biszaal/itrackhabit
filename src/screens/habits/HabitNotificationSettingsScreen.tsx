@@ -84,7 +84,12 @@ const HabitNotificationSettingsScreen: React.FC = () => {
         back
         onBack={() => navigation.goBack()}
         action={
-          <Pressable onPress={save} hitSlop={8}>
+          <Pressable
+            onPress={save}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Save notification settings"
+          >
             <Text style={{ color: t.colors.primary, fontSize: 14, fontWeight: '700' }}>Save</Text>
           </Pressable>
         }
@@ -176,6 +181,8 @@ const HabitNotificationSettingsScreen: React.FC = () => {
                 <Ionicons name="time-outline" size={18} color={t.colors.ink2} />
                 <Text style={{ color: t.colors.ink, fontSize: 15, fontWeight: '600', flex: 1 }}>{time}</Text>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove reminder at ${time}`}
                   onPress={() => {
                     const newTimes = times.filter((_, idx) => idx !== i);
                     updateSettings({ reminderTimes: newTimes });

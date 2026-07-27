@@ -2,59 +2,13 @@
 // Backend API client for React Native app
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_ONLY } from "./runtime";
 
-// Environment variable validation
-const validateEnvVariables = () => {
-  const required = {
-    EXPO_PUBLIC_BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL,
-  };
-
-  const optional = {
-    EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-    EXPO_PUBLIC_API_TIMEOUT: process.env.EXPO_PUBLIC_API_TIMEOUT,
-  };
-
-  // Check required variables
-  const missing = Object.entries(required)
-    .filter(([key, value]) => !value)
-    .map(([key]) => key);
-
-  if (missing.length > 0) {
-    console.error(
-      "❌ Missing required environment variables:",
-      missing.join(", ")
-    );
-    console.error("Please create a .env.local file based on .env.example");
-  }
-
-  // Log optional variables status
-  const missingOptional = Object.entries(optional)
-    .filter(([key, value]) => !value)
-    .map(([key]) => key);
-
-  if (missingOptional.length > 0) {
-    console.warn(
-      "⚠️ Optional environment variables not set:",
-      missingOptional.join(", ")
-    );
-  }
-
-  return missing.length === 0;
-};
-
-// Validate on load
-const isValid = validateEnvVariables();
-
-// Environment variables for backend API connection
+// The app runs offline-only (see config/runtime.ts), so no backend URL is
+// required and every request below short-circuits before it reaches the
+// network. This base URL only matters if a real backend is reintroduced.
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_BACKEND_URL || "https://itrackhabit-backend.vercel.app";
-
-if (!isValid) {
-  console.warn(
-    "⚠️ Running with missing environment variables. Some features may not work correctly."
-  );
-}
+  process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 // API Configuration
 export const API_CONFIG = {
@@ -205,15 +159,11 @@ class ApiClient {
     options: RequestInit = {},
     includeAuth: boolean = true
   ): Promise<T> {
-    // Local-only mode: no network calls, fail fast so consumers fall back
-    // to their offline path without waiting for a 10-second timeout.
-    try {
-      const { LOCAL_ONLY } = require("./runtime");
-      if (LOCAL_ONLY) {
-        throw new Error("LOCAL_ONLY: backend disabled");
-      }
-    } catch (e) {
-      if (e instanceof Error && e.message.startsWith("LOCAL_ONLY")) throw e;
+    // Offline-only build: fail fast so callers fall back to their local path
+    // instead of waiting out a 10-second network timeout. Callers surface
+    // this to users as an offline state, never as raw error text.
+    if (LOCAL_ONLY) {
+      throw new Error("Backend is disabled in this build");
     }
 
     const url = `${this.baseURL}${endpoint}`;

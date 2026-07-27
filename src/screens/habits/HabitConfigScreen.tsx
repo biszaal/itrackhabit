@@ -89,7 +89,12 @@ export const HabitConfigScreen: React.FC<HabitConfigScreenProps> = ({ navigation
           back
           onBack={() => navigation.goBack()}
           action={
-            <Pressable onPress={handleSave} hitSlop={8}>
+            <Pressable
+              onPress={handleSave}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Save habit"
+            >
               <Text style={{ color: t.colors.primary, fontSize: 14, fontWeight: '700' }}>Save</Text>
             </Pressable>
           }
@@ -108,6 +113,9 @@ export const HabitConfigScreen: React.FC<HabitConfigScreenProps> = ({ navigation
                 <Pressable
                   key={opt}
                   onPress={() => setHabit({ ...habit, habitType: opt })}
+                  accessibilityRole="button"
+                  accessibilityLabel={String(opt)}
+                  accessibilityState={{ selected: habit.habitType === opt }}
                   style={{
                     flex: 1,
                     height: 36,
@@ -131,6 +139,9 @@ export const HabitConfigScreen: React.FC<HabitConfigScreenProps> = ({ navigation
                 <Pressable
                   key={opt}
                   onPress={() => setHabit({ ...habit, goalPeriod: opt })}
+                  accessibilityRole="button"
+                  accessibilityLabel={String(opt)}
+                  accessibilityState={{ selected: habit.goalPeriod === opt }}
                   style={{
                     flex: 1,
                     height: 36,

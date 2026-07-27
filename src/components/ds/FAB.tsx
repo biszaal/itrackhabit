@@ -9,9 +9,18 @@ interface Props {
   icon?: keyof typeof Ionicons.glyphMap;
   bottom?: number;
   style?: ViewStyle;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
-export const FAB: React.FC<Props> = ({ onPress, icon = 'add', bottom, style }) => {
+export const FAB: React.FC<Props> = ({
+  onPress,
+  icon = 'add',
+  bottom,
+  style,
+  accessibilityLabel = 'Add habit',
+  accessibilityHint,
+}) => {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const b = bottom ?? insets.bottom + 88; // sit above tab bar
@@ -19,6 +28,9 @@ export const FAB: React.FC<Props> = ({ onPress, icon = 'add', bottom, style }) =
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       style={({ pressed }) => [
         {
           position: 'absolute',

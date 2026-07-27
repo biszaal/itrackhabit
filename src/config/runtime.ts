@@ -1,14 +1,12 @@
 // Runtime feature flags.
 //
-// Set LOCAL_ONLY=true to run the app fully offline with no Supabase or
-// backend API calls. SQLite remains the source of truth (it already is —
-// the app is offline-first), but all sync attempts and remote API hits
-// short-circuit immediately so the UI doesn't wait for network timeouts.
+// iTrackHabit v1 ships offline-only: there are no accounts and no server.
+// On-device SQLite is the source of truth, and every remote call
+// short-circuits immediately so the UI never waits on a network timeout.
 //
-// Override via the EXPO_PUBLIC_LOCAL_ONLY env var, e.g.
-//   EXPO_PUBLIC_LOCAL_ONLY=false npm start
+// This is a constant rather than an env-var lookup because the shipped UI
+// assumes it: the sign-in, sync, and social surfaces have been removed. Do
+// not flip this to `false` without restoring a real backend and those
+// screens — a half-enabled state shows users features that cannot work.
 
-const envFlag = process.env.EXPO_PUBLIC_LOCAL_ONLY;
-
-export const LOCAL_ONLY: boolean =
-  envFlag === undefined ? true : envFlag === 'true' || envFlag === '1';
+export const LOCAL_ONLY = true as const;

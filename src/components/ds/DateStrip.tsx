@@ -41,6 +41,17 @@ export const DateStrip: React.FC<Props> = ({
           <Pressable
             key={i}
             onPress={() => onSelect?.(d)}
+            accessibilityRole="button"
+            // The visible label is a single letter and a number; spell the
+            // date out so it is unambiguous when read aloud.
+            accessibilityLabel={
+              d.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              }) + (isToday ? ', today' : '')
+            }
+            accessibilityState={{ selected: !!isActive }}
             style={{
               flex: 1,
               paddingVertical: 8,

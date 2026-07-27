@@ -11,16 +11,16 @@ jest.mock("../src/services/auth", () => ({
 
 jest.mock("../src/services/core/OfflineStorage", () => ({
   offlineStorage: {
-    initialize: jest.fn().mockResolvedValue(),
+    initialize: jest.fn().mockResolvedValue(undefined),
     getHabits: jest.fn().mockResolvedValue([]),
     getAllHabits: jest.fn().mockResolvedValue([]),
     getHabitProgressForDate: jest.fn().mockResolvedValue(null),
     getAllHabitProgress: jest.fn().mockResolvedValue([]),
-    saveHabit: jest.fn().mockResolvedValue(),
-    saveHabitProgress: jest.fn().mockResolvedValue(),
-    updateHabitProgress: jest.fn().mockResolvedValue(),
-    deleteHabit: jest.fn().mockResolvedValue(),
-    updateHabit: jest.fn().mockResolvedValue(),
+    saveHabit: jest.fn().mockResolvedValue(undefined),
+    saveHabitProgress: jest.fn().mockResolvedValue(undefined),
+    updateHabitProgress: jest.fn().mockResolvedValue(undefined),
+    deleteHabit: jest.fn().mockResolvedValue(undefined),
+    updateHabit: jest.fn().mockResolvedValue(undefined),
     getHabitById: jest.fn().mockResolvedValue(null),
     getHabitProgress: jest.fn().mockResolvedValue([]),
     getAllHabitsIncludingDeleted: jest.fn().mockResolvedValue([]),
@@ -29,7 +29,7 @@ jest.mock("../src/services/core/OfflineStorage", () => ({
 
 jest.mock("../src/services/core/NetworkService", () => ({
   networkService: {
-    initialize: jest.fn().mockResolvedValue(),
+    initialize: jest.fn().mockResolvedValue(undefined),
     getConnectionStatus: jest.fn().mockReturnValue(false),
   },
 }));

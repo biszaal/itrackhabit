@@ -8,17 +8,36 @@ import { useTheme } from '../../theme/ThemeContext';
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   Home: 'home',
   Calendar: 'calendar',
-  Challenges: 'trophy',
-  Friends: 'people',
+  Analytics: 'stats-chart',
+  Achievements: 'trophy',
   Profile: 'person',
 };
 
 const LABELS: Record<string, string> = {
   Home: 'Today',
   Calendar: 'Calendar',
-  Challenges: 'Challenges',
-  Friends: 'Friends',
+  Analytics: 'Insights',
+  Achievements: 'Awards',
   Profile: 'You',
+};
+
+const BAR_HEIGHT = 64;
+const BAR_PADDING_TOP = 8;
+const BAR_MIN_BOTTOM = 16;
+
+/**
+ * Space a tab screen must reserve at the bottom of its scroll content so the
+ * last row clears the floating tab bar. The bar is absolutely positioned, so
+ * it does not shrink the scroll viewport on its own — screens that hardcode a
+ * guess here end up with unreachable content.
+ */
+export const useTabBarHeight = (): number => {
+  const insets = useSafeAreaInsets();
+  return (
+    BAR_PADDING_TOP +
+    BAR_HEIGHT +
+    (insets.bottom > 0 ? insets.bottom : BAR_MIN_BOTTOM)
+  );
 };
 
 export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
@@ -34,8 +53,8 @@ export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, naviga
         right: 0,
         bottom: 0,
         paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: insets.bottom > 0 ? insets.bottom : 16,
+        paddingTop: BAR_PADDING_TOP,
+        paddingBottom: insets.bottom > 0 ? insets.bottom : BAR_MIN_BOTTOM,
       }}
     >
       <View
@@ -44,7 +63,7 @@ export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, naviga
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-around',
-            height: 64,
+            height: BAR_HEIGHT,
             paddingHorizontal: 4,
             backgroundColor: t.colors.bgElev,
             borderRadius: 22,

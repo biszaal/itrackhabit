@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StatusBar, ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface Props {
@@ -8,7 +8,10 @@ interface Props {
   background?: string;
 }
 
-// Root container for a screen. Sets bg color + status bar style.
+// Root container for a screen. Sets the background color only — the status bar
+// is owned globally by <ThemedStatusBar /> in App.tsx. Screens that mount and
+// unmount (modals, stack pushes) must not each re-assert a bar style, or the
+// resolved style becomes mount-order dependent.
 export const Screen: React.FC<Props> = ({ children, style, background }) => {
   const t = useTheme();
   return (
@@ -21,11 +24,6 @@ export const Screen: React.FC<Props> = ({ children, style, background }) => {
         style,
       ]}
     >
-      <StatusBar
-        barStyle={t.isDark ? 'light-content' : 'dark-content'}
-        backgroundColor="transparent"
-        translucent
-      />
       {children}
     </View>
   );

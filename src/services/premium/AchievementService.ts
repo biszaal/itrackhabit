@@ -1,5 +1,6 @@
 import { offlineStorage, dataService } from '../core';
 import { v4 as uuidv4 } from 'uuid';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 // Achievement types
 export interface Achievement {
@@ -357,8 +358,8 @@ class AchievementService {
       const startDate = new Date(today.getTime() - timeframe * 24 * 60 * 60 * 1000);
       
       const dailyStats = await dataService.getDailyStats(
-        startDate.toISOString().split('T')[0],
-        today.toISOString().split('T')[0]
+        toLocalISODate(startDate),
+        toLocalISODate(today)
       );
 
       // Count days where all habits were completed

@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { dataService } from '../core/DataService';
 import { Habit, HabitWithStats } from '../../types';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
@@ -324,8 +325,8 @@ class EnhancedNotificationService {
       
       const progress = await dataService.getHabitProgress(
         habitId,
-        thirtyDaysAgo.toISOString().split('T')[0],
-        new Date().toISOString().split('T')[0]
+        toLocalISODate(thirtyDaysAgo),
+        toLocalISODate()
       );
 
       // Analyze completion times to find optimal hours

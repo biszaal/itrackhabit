@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabaseService } from './SupabaseService';
 import { offlineStorage } from './OfflineStorage';
 import { Habit, HabitProgress, User, FrequencyType, HabitType } from '../../types';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 interface MockUserData {
   user: User;
@@ -137,7 +138,7 @@ class MockDataService {
             id: uuidv4(),
             habitId: habit.id,
             // userId: habit.userId,
-            date: currentDate.toISOString().split('T')[0],
+            date: toLocalISODate(currentDate),
             // completed: true,
             // value: this.generateProgressValue(habit),
             notes: Math.random() > 0.8 ? this.getRandomNote() : undefined,
@@ -341,8 +342,8 @@ class MockDataService {
         habits: habits?.length || 0,
         progress: progress?.length || 0,
         dateRange: {
-          start: this.DATA_START_DATE.toISOString().split('T')[0],
-          end: this.DATA_END_DATE.toISOString().split('T')[0],
+          start: toLocalISODate(this.DATA_START_DATE),
+          end: toLocalISODate(this.DATA_END_DATE),
         },
       };
     } catch (error) {

@@ -51,6 +51,8 @@ export const AppHeader: React.FC<Props> = ({
           <Pressable
             onPress={onBack}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             style={{
               width: 36,
               height: 36,
@@ -70,6 +72,7 @@ export const AppHeader: React.FC<Props> = ({
 
       {title && (
         <Text
+          accessibilityRole="header"
           style={{
             color: t.colors.ink,
             fontSize: large ? 28 : 20,

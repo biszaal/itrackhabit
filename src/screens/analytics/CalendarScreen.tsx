@@ -5,7 +5,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MainTabScreenProps } from '../../types/navigation';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
-import { Screen, Card, AppHeader, Chip } from '../../components/ds';
+import { Screen, Card, AppHeader, Chip, useTabBarHeight } from '../../components/ds';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 type CalendarScreenProps = MainTabScreenProps<'Calendar'>;
 
@@ -37,6 +38,7 @@ interface DayCell {
 
 export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) => {
   const t = useTheme();
+  const tabBarHeight = useTabBarHeight();
   const [habits, setHabits] = useState<any[]>([]);
   const [filter, setFilter] = useState<string>('Overall');
   const [cursor, setCursor] = useState(new Date());
@@ -51,8 +53,8 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
 
       const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
       const end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
-      const startISO = start.toISOString().split('T')[0];
-      const endISO = end.toISOString().split('T')[0];
+      const startISO = toLocalISODate(start);
+      const endISO = toLocalISODate(end);
       const daily = await dataService.getDailyStats(startISO, endISO);
       const map = new Map<string, number>();
       daily.forEach((d: any) => map.set(d.date, d.completionRate));
@@ -86,7 +88,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
     }
     for (let d = 1; d <= last; d++) {
       const date = new Date(y, m, d);
-      const iso = date.toISOString().split('T')[0];
+      const iso = toLocalISODate(date);
       const pct = progress.get(iso) ?? 0;
       const level = pct === 0 ? 0 : pct < 25 ? 1 : pct < 50 ? 2 : pct < 90 ? 3 : 4;
       cells.push({
@@ -122,6 +124,9 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
   const handleNextMonth = () => {
     setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
   };
+  const handleToday = () => {
+    setCursor(new Date());
+  };
 
   return (
     <Screen>
@@ -129,8 +134,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
         title="Calendar"
         subtitle={`${MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`}
         action={
+          // Jump back to the current month — replaces a search affordance that
+          // was rendered but never wired to a handler.
           <Pressable
+            onPress={handleToday}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go to current month"
             style={{
               width: 36,
               height: 36,
@@ -140,12 +150,12 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="search" size={18} color={t.colors.ink2} />
+            <Ionicons name="today-outline" size={18} color={t.colors.ink2} />
           </Pressable>
         }
       />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: 140 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: tabBarHeight + 24 }}>
         {/* Habit filter */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
           <Chip label="● Overall" active={filter === 'Overall'} onPress={() => setFilter('Overall')} />
@@ -167,7 +177,9 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 12 }}>
           <Pressable
             onPress={handlePrevMonth}
-            hitSlop={6}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Previous month"
             style={{
               width: 32,
               height: 32,
@@ -184,7 +196,9 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
           </Text>
           <Pressable
             onPress={handleNextMonth}
-            hitSlop={6}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Next month"
             style={{
               width: 32,
               height: 32,
@@ -231,6 +245,9 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
                   <Pressable
                     key={i}
                     onPress={() => setSelectedISO(cell.iso ?? null)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${cell.date}${cell.isToday ? ', today' : ''}`}
+                    accessibilityState={{ selected: selectedISO === cell.iso }}
                     style={{
                       flex: 1,
                       aspectRatio: 1,

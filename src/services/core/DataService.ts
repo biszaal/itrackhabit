@@ -11,6 +11,7 @@ import { supabaseService } from "./SupabaseService";
 import { achievementService } from "../premium/AchievementService";
 import { socialService } from "../social/SocialService";
 import { featureGatingService } from "./FeatureGatingService";
+import { calculateHabitStats, HabitStats } from "../../utils/helpers/habits";
 import {
   Habit,
   HabitProgress,
@@ -618,7 +619,7 @@ class DataService {
     }
 
     for (const habit of habits) {
-      const stats = await this.calculateHabitStats(habit.id);
+      const stats = await this.calculateHabitStats(habit);
       habitsWithStats.push({
         ...habit,
         ...stats,
@@ -866,60 +867,15 @@ class DataService {
 
   // ===== STATISTICS AND ANALYTICS =====
 
-  private async calculateHabitStats(habitId: string): Promise<{
-    currentStreak: number;
-    longestStreak: number;
-    completionRate: number;
-    isDoneToday: boolean;
-    totalCompletions: number;
-  }> {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  private async calculateHabitStats(habit: Habit): Promise<HabitStats> {
+    // No date floor: a habit's longest streak is a lifetime figure, and the
+    // streak walk needs every day back to creation to spot the breaks.
+    const progress = await offlineStorage.getHabitProgress(habit.id);
 
-    const progress = await offlineStorage.getHabitProgress(
-      habitId,
-      thirtyDaysAgo.toISOString().split("T")[0]
-    );
-
-    const today = new Date().toISOString().split("T")[0];
-    const isDoneToday = progress.some(
-      (p) => p.date === today && p.status === "done"
-    );
-
-    const completedDays = progress.filter((p) => p.status === "done");
-    const totalCompletions = completedDays.length;
-    const completionRate =
-      progress.length > 0
-        ? Math.round((totalCompletions / progress.length) * 100)
-        : 0;
-
-    // Calculate streaks
-    const sortedProgress = progress.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-
-    for (const p of sortedProgress) {
-      if (p.status === "done") {
-        tempStreak++;
-        if (currentStreak === 0) currentStreak = tempStreak;
-        longestStreak = Math.max(longestStreak, tempStreak);
-      } else {
-        if (currentStreak > 0) currentStreak = 0;
-        tempStreak = 0;
-      }
-    }
-
-    return {
-      currentStreak,
-      longestStreak,
-      completionRate,
-      isDoneToday,
-      totalCompletions,
-    };
+    return calculateHabitStats(progress, {
+      createdAt: habit.createdAt,
+      frequency: habit.frequency,
+    });
   }
 
   async getDailyStats(

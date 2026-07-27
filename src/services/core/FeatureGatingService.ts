@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../../types';
-import { authService } from '../auth';
-import { premiumService } from '../premium/PremiumService';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 export interface FeatureLimit {
   feature: string;
@@ -29,8 +28,6 @@ export interface UpgradePrompt {
 }
 
 class FeatureGatingService {
-  private readonly FREE_HABIT_LIMIT = 3;
-  private readonly FREE_REMINDER_LIMIT = 1;
   private readonly STORAGE_KEY = 'feature_usage';
 
   // Define all app features
@@ -73,121 +70,33 @@ class FeatureGatingService {
   }
 
   // Core feature gating methods
-  async canCreateHabit(user?: User): Promise<{ allowed: boolean; reason?: string; prompt?: UpgradePrompt }> {
-    const currentUser = user || await authService.getCurrentUser();
-    if (!currentUser) {
-      return { allowed: false, reason: 'User not authenticated' };
-    }
+  //
+  // v1 has no paid tier and no accounts, so nothing is gated. These stay as
+  // methods rather than being deleted because DataService and the reminder
+  // screens call them on every create; returning `allowed` keeps that wiring
+  // intact for whenever a paid tier is reintroduced.
+  async canCreateHabit(_user?: User): Promise<{ allowed: boolean; reason?: string; prompt?: UpgradePrompt }> {
+    return { allowed: true };
+  }
 
-    if (premiumService.isPremiumUser(currentUser)) {
-      return { allowed: true };
-    }
+  async canAccessFeature(featureId: string, _user?: User): Promise<{ allowed: boolean; reason?: string; prompt?: UpgradePrompt }> {
+    const feature = this.features.find(f => f.id === featureId);
 
-    // Check current habit count
-    const habitCount = await this.getCurrentHabitCount();
-    
-    if (habitCount >= this.FREE_HABIT_LIMIT) {
-      const prompt: UpgradePrompt = {
-        type: 'limit_reached',
-        title: 'Habit Limit Reached',
-        description: `You've reached your limit of ${this.FREE_HABIT_LIMIT} habits. Upgrade to Premium for unlimited habits and advanced features!`,
-        ctaText: 'Upgrade to Premium',
-        priority: 'high',
-        feature: 'unlimited_habits',
-      };
-      
-      return { 
-        allowed: false, 
-        reason: `Free plan limited to ${this.FREE_HABIT_LIMIT} habits`, 
-        prompt 
-      };
-    }
-
-    // Show upgrade nudge when approaching limit
-    if (habitCount >= this.FREE_HABIT_LIMIT - 1) {
-      const prompt: UpgradePrompt = {
-        type: 'limit_reached',
-        title: 'Almost at your limit',
-        description: `You can create ${this.FREE_HABIT_LIMIT - habitCount} more habit${this.FREE_HABIT_LIMIT - habitCount === 1 ? '' : 's'}. Upgrade to Premium for unlimited habits!`,
-        ctaText: 'Upgrade Now',
-        priority: 'medium',
-        feature: 'unlimited_habits',
-      };
-      
-      return { 
-        allowed: true, 
-        prompt 
-      };
+    if (!feature) {
+      return { allowed: false, reason: 'Feature not found' };
     }
 
     return { allowed: true };
   }
 
-  async canAccessFeature(featureId: string, user?: User): Promise<{ allowed: boolean; reason?: string; prompt?: UpgradePrompt }> {
-    const currentUser = user || await authService.getCurrentUser();
-    const feature = this.features.find(f => f.id === featureId);
-    
-    if (!feature) {
-      return { allowed: false, reason: 'Feature not found' };
-    }
-
-    if (!feature.isPremium) {
-      return { allowed: true };
-    }
-
-    if (currentUser && premiumService.isPremiumUser(currentUser)) {
-      return { allowed: true };
-    }
-
-    const prompt: UpgradePrompt = {
-      type: 'feature_locked',
-      title: `${feature.name} is Premium`,
-      description: feature.description + '. Upgrade to Premium to unlock this feature!',
-      ctaText: 'Upgrade to Premium',
-      priority: 'high',
-      feature: featureId,
-    };
-
-    return { 
-      allowed: false, 
-      reason: 'Premium feature', 
-      prompt 
-    };
-  }
-
-  async canAddReminder(habitId: string, user?: User): Promise<{ allowed: boolean; reason?: string; prompt?: UpgradePrompt }> {
-    const currentUser = user || await authService.getCurrentUser();
-    
-    if (currentUser && premiumService.isPremiumUser(currentUser)) {
-      return { allowed: true };
-    }
-
-    const reminderCount = await this.getReminderCount(habitId);
-    
-    if (reminderCount >= this.FREE_REMINDER_LIMIT) {
-      const prompt: UpgradePrompt = {
-        type: 'limit_reached',
-        title: 'Reminder Limit Reached',
-        description: `Free plan allows ${this.FREE_REMINDER_LIMIT} reminder per habit. Upgrade to Premium for unlimited reminders and smart scheduling!`,
-        ctaText: 'Upgrade to Premium',
-        priority: 'medium',
-        feature: 'multiple_reminders',
-      };
-      
-      return { 
-        allowed: false, 
-        reason: `Free plan limited to ${this.FREE_REMINDER_LIMIT} reminder per habit`, 
-        prompt 
-      };
-    }
-
+  async canAddReminder(_habitId: string, _user?: User): Promise<{ allowed: boolean; reason?: string; prompt?: UpgradePrompt }> {
     return { allowed: true };
   }
 
   // Usage tracking methods
   async trackFeatureUsage(featureId: string, action: 'attempt' | 'use' = 'use'): Promise<void> {
     const usage = await this.getFeatureUsage();
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalISODate();
     
     if (!usage[featureId]) {
       usage[featureId] = { daily: {}, total: 0 };
@@ -203,93 +112,26 @@ class FeatureGatingService {
     await this.saveFeatureUsage(usage);
   }
 
-  async getFeatureLimits(user?: User): Promise<FeatureLimit[]> {
-    const currentUser = user || await authService.getCurrentUser();
-    const isPremium = currentUser && premiumService.isPremiumUser(currentUser);
+  async getFeatureLimits(_user?: User): Promise<FeatureLimit[]> {
     const habitCount = await this.getCurrentHabitCount();
-    
-    const limits: FeatureLimit[] = [
+
+    return [
       {
         feature: 'habits',
-        limit: isPremium ? -1 : this.FREE_HABIT_LIMIT,
+        limit: -1,
         current: habitCount,
-        unlimited: isPremium || false,
-      }
+        unlimited: true,
+      },
     ];
-
-    if (!isPremium) {
-      limits.push({
-        feature: 'reminders_per_habit',
-        limit: this.FREE_REMINDER_LIMIT,
-        current: 0, // Would need to calculate per habit
-        unlimited: false,
-      });
-    }
-
-    return limits;
   }
 
-  // Upgrade prompts and nudges
-  async shouldShowUpgradePrompt(user?: User): Promise<UpgradePrompt | null> {
-    const currentUser = user || await authService.getCurrentUser();
-    
-    if (!currentUser || premiumService.isPremiumUser(currentUser)) {
-      return null;
-    }
-
-    // Check for trial ending
-    if (currentUser.subscriptionStatus === 'trial') {
-      const daysRemaining = premiumService.getTrialDaysRemaining(currentUser);
-      if (daysRemaining <= 2) {
-        return {
-          type: 'trial_ending',
-          title: `Trial ends in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`,
-          description: 'Continue enjoying unlimited habits and premium features by subscribing now!',
-          ctaText: 'Subscribe Now',
-          priority: 'high',
-        };
-      }
-    }
-
-    // Check usage patterns
-    const habitCount = await this.getCurrentHabitCount();
-    if (habitCount >= this.FREE_HABIT_LIMIT * 0.8) { // 80% of limit
-      return {
-        type: 'usage_heavy',
-        title: 'You\'re a power user!',
-        description: `You're using ${habitCount} of ${this.FREE_HABIT_LIMIT} free habits. Upgrade to Premium for unlimited habits and advanced features!`,
-        ctaText: 'Upgrade to Premium',
-        priority: 'medium',
-      };
-    }
-
+  // No paid tier in v1, so there is nothing to upsell.
+  async shouldShowUpgradePrompt(_user?: User): Promise<UpgradePrompt | null> {
     return null;
   }
 
-  async getUpgradeReasons(user?: User): Promise<string[]> {
-    const currentUser = user || await authService.getCurrentUser();
-    const reasons: string[] = [];
-    
-    if (!currentUser || premiumService.isPremiumUser(currentUser)) {
-      return reasons;
-    }
-
-    const habitCount = await this.getCurrentHabitCount();
-    
-    if (habitCount >= this.FREE_HABIT_LIMIT * 0.5) {
-      reasons.push(`You're using ${habitCount}/${this.FREE_HABIT_LIMIT} free habits`);
-    }
-    
-    const usage = await this.getFeatureUsage();
-    if (usage.advanced_analytics?.total > 0) {
-      reasons.push('You\'ve tried advanced analytics');
-    }
-    
-    if (usage.social_sharing?.total > 0) {
-      reasons.push('You\'ve used social features');
-    }
-
-    return reasons;
+  async getUpgradeReasons(_user?: User): Promise<string[]> {
+    return [];
   }
 
   // Feature discovery
@@ -310,17 +152,8 @@ class FeatureGatingService {
   }
 
   // Trial and onboarding
-  async shouldOfferTrial(user?: User): Promise<boolean> {
-    const currentUser = user || await authService.getCurrentUser();
-    
-    if (!currentUser) return false;
-    if (currentUser.subscriptionStatus !== 'free') return false;
-    if ((currentUser as any).hasUsedTrial) return false;
-    
-    const habitCount = await this.getCurrentHabitCount();
-    
-    // Offer trial when they're approaching the limit or have used premium features
-    return habitCount >= this.FREE_HABIT_LIMIT - 1;
+  async shouldOfferTrial(_user?: User): Promise<boolean> {
+    return false;
   }
 
   // Utility methods
@@ -335,12 +168,6 @@ class FeatureGatingService {
       console.error('Failed to get habit count:', error);
       return 0;
     }
-  }
-
-  private async getReminderCount(habitId: string): Promise<number> {
-    // This would check the reminder count for a specific habit
-    // For now, return a mock value
-    return 1;
   }
 
   private async getFeatureUsage(): Promise<any> {

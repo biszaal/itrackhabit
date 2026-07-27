@@ -77,7 +77,13 @@ const Row: React.FC<{
       ) : null}
     </View>
   );
-  return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
+  return onPress ? (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title}>
+      {inner}
+    </Pressable>
+  ) : (
+    inner
+  );
 };
 
 export const PrivacySecurity: React.FC<{ navigation: any }> = ({ navigation }) => {

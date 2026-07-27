@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, RefreshControl, A
 import { useNavigation } from '@react-navigation/native';
 import { achievementService, UserAchievement, AchievementProgress } from '../../services/premium';
 import { useTheme } from '../../theme/ThemeContext';
-import { Screen, AppHeader, Card, Ring } from '../../components/ds';
+import { Screen, AppHeader, Card, Ring, useTabBarHeight } from '../../components/ds';
 
 const tint = (hex: string, ratio: number, bg: string): string => {
   const h = hex.replace('#', '');
@@ -27,6 +27,9 @@ const SegTab: React.FC<{ active: boolean; label: string; onPress: () => void }> 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
       style={{
         flex: 1,
         height: 36,
@@ -43,6 +46,7 @@ const SegTab: React.FC<{ active: boolean; label: string; onPress: () => void }> 
 
 const AchievementsScreen: React.FC = () => {
   const t = useTheme();
+  const tabBarHeight = useTabBarHeight();
   const navigation = useNavigation<any>();
   const [filter, setFilter] = useState<Filter>('all');
   const [progress, setProgress] = useState<AchievementProgress[]>([]);
@@ -102,14 +106,12 @@ const AchievementsScreen: React.FC = () => {
       <AppHeader
         title="Achievements"
         subtitle={stats ? `${earnedCount} earned · ${Math.max(0, totalCount - earnedCount)} in progress` : ''}
-        back
-        onBack={() => navigation.goBack()}
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.ink3} />}
-        contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: 60 }}
+        contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: tabBarHeight + 24 }}
       >
         {/* Hero level card */}
         <Card variant="elevated" padding={18} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>

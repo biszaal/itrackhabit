@@ -42,5 +42,19 @@ export const Chip: React.FC<Props> = ({ label, icon, active, onPress, color, sty
     </View>
   );
 
-  return onPress ? <Pressable onPress={onPress}>{inner}</Pressable> : inner;
+  // 28pt tall by design, so an interactive chip needs hit slop to reach the
+  // 44pt minimum target size.
+  return onPress ? (
+    <Pressable
+      onPress={onPress}
+      hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: !!active }}
+    >
+      {inner}
+    </Pressable>
+  ) : (
+    inner
+  );
 };

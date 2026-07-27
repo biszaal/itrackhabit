@@ -4,8 +4,9 @@ import {
   UserBadge, 
   BadgeProgress,
   HabitProgress,
-  ChallengeParticipant 
+  ChallengeParticipant
 } from '../../types';
+import { calculateHabitStats } from '../../utils/helpers/habits';
 
 class BadgeService {
   // Get all available badges
@@ -127,8 +128,8 @@ class BadgeService {
       switch (badge.type) {
         case 'streak':
           // Calculate longest streak
-          const streaks = userHabits.map(habit => 
-            this.calculateStreakForHabit(habit.id, habitProgress)
+          const streaks = userHabits.map(habit =>
+            this.calculateStreakForHabit(habit, habitProgress)
           );
           currentValue = Math.max(...streaks, 0);
           break;
@@ -203,31 +204,16 @@ class BadgeService {
     }
   }
 
-  // Helper method to calculate streak for a specific habit
-  private calculateStreakForHabit(habitId: string, habitProgress: HabitProgress[]): number {
-    const habitEntries = habitProgress
-      .filter(p => p.habitId === habitId && p.status === 'done')
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Helper method to calculate the best streak a habit has ever reached.
+  // Delegates to the shared stats helper so badges and the rest of the app
+  // never disagree about what a streak is.
+  private calculateStreakForHabit(habit: any, habitProgress: HabitProgress[]): number {
+    const entries = habitProgress.filter(p => p.habitId === habit.id);
 
-    if (habitEntries.length === 0) return 0;
-
-    let currentStreak = 0;
-    let expectedDate = new Date();
-    expectedDate.setHours(0, 0, 0, 0);
-
-    for (const entry of habitEntries) {
-      const entryDate = new Date(entry.date);
-      entryDate.setHours(0, 0, 0, 0);
-
-      if (entryDate.getTime() === expectedDate.getTime()) {
-        currentStreak++;
-        expectedDate.setDate(expectedDate.getDate() - 1);
-      } else {
-        break;
-      }
-    }
-
-    return currentStreak;
+    return calculateHabitStats(entries, {
+      createdAt: habit.createdAt,
+      frequency: habit.frequency ?? 'daily',
+    }).longestStreak;
   }
 
   // Helper method to calculate days between dates

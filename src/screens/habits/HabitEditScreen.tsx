@@ -94,6 +94,9 @@ export const HabitEditScreen: React.FC<HabitEditScreenProps> = ({ navigation, ro
                 <Pressable
                   key={e}
                   onPress={() => setHabit({ ...habit, emoji: e })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Emoji ${e}`}
+                  accessibilityState={{ selected: habit.emoji === e }}
                   style={{
                     width: 52,
                     height: 52,
@@ -119,6 +122,9 @@ export const HabitEditScreen: React.FC<HabitEditScreenProps> = ({ navigation, ro
                 <Pressable
                   key={c}
                   onPress={() => setHabit({ ...habit, color: c })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Habit color"
+                  accessibilityState={{ selected: habit.color === c }}
                   style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', position: 'relative' }}
                 >
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: c }} />
@@ -147,6 +153,9 @@ export const HabitEditScreen: React.FC<HabitEditScreenProps> = ({ navigation, ro
                 <Pressable
                   key={f.value}
                   onPress={() => setHabit({ ...habit, frequency: f.value })}
+                  accessibilityRole="button"
+                  accessibilityLabel={f.label}
+                  accessibilityState={{ selected: habit.frequency === f.value }}
                   style={{
                     flex: 1,
                     height: 36,

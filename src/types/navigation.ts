@@ -3,12 +3,7 @@ import { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/n
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
-  Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
-  Welcome: undefined;
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
   CreateHabit: { habitId?: string; type?: 'health'; habitTemplate?: any; isCustom?: boolean };
   CreateEditHabit: { template?: any; habit?: any };
   HabitTemplates: undefined;
@@ -17,24 +12,12 @@ export type RootStackParamList = {
   HabitTimer: { habitId: string };
   HabitConfig: { habitTemplate: any };
   HabitEdit: { habit: any };
-  ChallengeDetails: { challengeId: string };
-  CreateChallenge: { habitId?: string };
-  FriendProfile: { userId: string };
   Settings: undefined;
   HabitNotificationSettings: undefined;
-  Analytics: undefined;
-  Achievements: undefined;
   Onboarding: undefined;
-  Premium: undefined;
   HealthPermissions: { habitId?: string };
   CompoundProgress: undefined;
   HabitDesign: { habitId: string };
-  ContactSelection: undefined;
-  SocialFeed: undefined;
-  HabitGroups: undefined;
-  Mentors: undefined;
-  GroupDetails: { groupId: string };
-  MentorProfile: { mentorId: string };
   AIInsights: undefined;
   NotificationSettingsNew: undefined;
   DataManagement: undefined;
@@ -42,17 +25,11 @@ export type RootStackParamList = {
   DeveloperTools: undefined;
 };
 
-export type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
-};
-
 export type MainTabParamList = {
   Home: { selectedDate?: string };
   Calendar: undefined;
-  Challenges: undefined;
-  Friends: undefined;
+  Analytics: undefined;
+  Achievements: undefined;
   Profile: undefined;
 };
 

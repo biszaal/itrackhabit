@@ -49,6 +49,7 @@ import {
   HealthPermission,
   WorkoutType
 } from '../../types/health';
+import { toLocalISODate } from '../../utils/formatting/time';
 
 class HealthService {
   private isInitialized = false;
@@ -185,7 +186,7 @@ class HealthService {
       throw new Error('Health service not initialized');
     }
 
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = toLocalISODate(date);
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -419,13 +420,13 @@ class HealthService {
       try {
         const healthData = await this.getHealthDataForHabit(healthDataType, date);
         trends.push({
-          date: date.toISOString().split('T')[0],
+          date: toLocalISODate(date),
           value: healthData.actualValue,
         });
       } catch (error) {
         console.error(`Error getting health data for ${date}:`, error);
         trends.push({
-          date: date.toISOString().split('T')[0],
+          date: toLocalISODate(date),
           value: 0,
         });
       }
