@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  check:
+    name: Type-check, test, bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      # Streak math is keyed on local calendar days, so a UTC-only runner
+      # would not catch the off-by-one it is most prone to.
+      - name: Test (UTC)
+        run: npx jest --ci
+        env:
+          TZ: UTC
+
+      - name: Test (UTC-8)
+        run: npx jest --ci
+        env:
+          TZ: America/Los_Angeles
+
+      - name: Test (UTC+13)
+        run: npx jest --ci
+        env:
+          TZ: Pacific/Auckland
+
+      # Catches broken imports and dead route references that tsc misses.
+      - name: Bundle for iOS
+        run: npx expo export --platform ios --output-dir .ci-export
