@@ -126,7 +126,7 @@ class MockDataService {
     
     for (const habit of habits) {
       const habitCreatedAt = new Date(habit.createdAt);
-      let currentDate = new Date(habitCreatedAt);
+      const currentDate = new Date(habitCreatedAt);
       
       // Generate progress from habit creation to now
       while (currentDate <= this.DATA_END_DATE) {

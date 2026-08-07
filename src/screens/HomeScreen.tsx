@@ -30,6 +30,7 @@ import {
   Button,
   useTabBarHeight,
 } from '../components/ds';
+import { Illustration } from '../components/art';
 
 type HomeScreenProps = MainTabScreenProps<'Home'>;
 
@@ -38,25 +39,6 @@ const greetingFor = (d: Date) => {
   if (h < 12) return 'Good morning';
   if (h < 18) return 'Good afternoon';
   return 'Good evening';
-};
-
-const emojiFor = (title: string): string => {
-  const t = (title || '').toLowerCase();
-  if (t.includes('run')) return '🏃';
-  if (t.includes('read') || t.includes('book')) return '📚';
-  if (t.includes('meditat')) return '🧘';
-  if (t.includes('exercise')) return '💪';
-  if (t.includes('walk')) return '🚶';
-  if (t.includes('sleep')) return '🌙';
-  if (t.includes('water') || t.includes('hydrat')) return '💧';
-  if (t.includes('yoga')) return '🧘';
-  if (t.includes('gym')) return '🏋️';
-  if (t.includes('bike') || t.includes('cycl')) return '🚴';
-  if (t.includes('swim')) return '🏊';
-  if (t.includes('write') || t.includes('journal')) return '✍️';
-  if (t.includes('music')) return '🎵';
-  if (t.includes('cook')) return '👨‍🍳';
-  return '🎯';
 };
 
 const formatDateLong = (d: Date) =>
@@ -425,38 +407,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
           ) : totalCount === 0 ? (
             <View style={{ alignItems: 'center', paddingTop: 24, paddingHorizontal: 12 }}>
-              <View
-                style={{
-                  width: 200,
-                  height: 200,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: 12,
-                }}
-              >
-                <View
-                  style={{
-                    position: 'absolute',
-                    width: 140,
-                    height: 140,
-                    borderRadius: 70,
-                    borderWidth: 12,
-                    borderColor: t.colors.lineSoft,
-                  }}
-                />
-                <View
-                  style={{
-                    position: 'absolute',
-                    width: 140,
-                    height: 140,
-                    borderRadius: 70,
-                    borderWidth: 12,
-                    borderColor: 'transparent',
-                    borderTopColor: t.colors.primary,
-                    transform: [{ rotate: '45deg' }],
-                  }}
-                />
-                <Text style={{ fontSize: 48 }}>🌱</Text>
+              <View style={{ marginBottom: 20 }}>
+                <Illustration name="firstHabit" width={200} surface={t.colors.bg} />
               </View>
               <Text
                 style={{
@@ -499,7 +451,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 return (
                   <HabitRow
                     key={habit.id}
-                    emoji={habit.emoji || emojiFor(habit.title || habit.name)}
+                    icon={habit.emoji}
                     name={habit.title || habit.name || 'Untitled habit'}
                     target={targetLabel}
                     color={habit.color || t.colors.primary}

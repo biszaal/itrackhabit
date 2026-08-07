@@ -227,22 +227,22 @@ class SocialService {
     const longestStreak = Math.max(...habits.map(h => h.longestStreak));
 
     switch (type) {
-      case 'achievement':
+      case 'achievement': {
         const latestAchievement = achievements[achievements.length - 1];
         return {
           type: 'achievement',
-          title: '🏆 New Achievement Unlocked!',
+          title: 'New achievement unlocked',
           description: latestAchievement?.achievement?.title || 'Keep building those habits!',
           stats: {
             achievementsCount: achievements.length,
             totalHabits,
           },
         };
-
+      }
       case 'streak':
         return {
           type: 'streak',
-          title: `🔥 ${longestStreak} Day Streak!`,
+          title: `${longestStreak} day streak`,
           description: `Crushing my habits ${longestStreak} days in a row!`,
           stats: {
             streakDays: longestStreak,
@@ -253,7 +253,7 @@ class SocialService {
       case 'progress':
         return {
           type: 'progress',
-          title: '📈 Habit Progress Update',
+          title: 'Habit progress update',
           description: `${Math.round(averageCompletionRate)}% completion rate across ${totalHabits} habits`,
           stats: {
             completionRate: Math.round(averageCompletionRate),
@@ -265,7 +265,7 @@ class SocialService {
       case 'milestone':
         return {
           type: 'milestone',
-          title: '🎯 Major Milestone Reached!',
+          title: 'Major milestone reached',
           description: `${totalHabits} active habits with ${achievements.length} achievements earned!`,
           stats: {
             totalHabits,
@@ -281,13 +281,13 @@ class SocialService {
     let shareText = `${content.title}\n\n${content.description}\n\n`;
     
     if (content.stats.streakDays) {
-      shareText += `🔥 ${content.stats.streakDays} day streak\n`;
+      shareText += `${content.stats.streakDays} day streak\n`;
     }
     if (content.stats.completionRate) {
-      shareText += `📊 ${content.stats.completionRate}% completion rate\n`;
+      shareText += `${content.stats.completionRate}% completion rate\n`;
     }
     if (content.stats.totalHabits) {
-      shareText += `🎯 ${content.stats.totalHabits} active habits\n`;
+      shareText += `${content.stats.totalHabits} active habits\n`;
     }
     
     shareText += '\n#HabitTracker #SelfImprovement #iTrackHabit';
@@ -369,7 +369,7 @@ class SocialService {
           name: 'Morning Warriors',
           description: 'Start your day right with morning routines and early habits',
           category: 'productivity',
-          emoji: '🌅',
+          emoji: 'sunrise',
           memberCount: 847,
           isPublic: true,
           createdBy: 'system',
@@ -382,7 +382,7 @@ class SocialService {
           name: 'Fitness Fanatics',
           description: 'Daily workouts, nutrition tracking, and fitness accountability',
           category: 'health',
-          emoji: '💪',
+          emoji: 'strength',
           memberCount: 1203,
           isPublic: true,
           createdBy: 'system',
@@ -395,7 +395,7 @@ class SocialService {
           name: 'Mindful Souls',
           description: 'Meditation, gratitude, and mindfulness practices',
           category: 'mindfulness',
-          emoji: '🧘',
+          emoji: 'meditate',
           memberCount: 692,
           isPublic: true,
           createdBy: 'system',
@@ -408,7 +408,7 @@ class SocialService {
           name: 'Learning Circle',
           description: 'Daily reading, skill development, and knowledge sharing',
           category: 'learning',
-          emoji: '📚',
+          emoji: 'study',
           memberCount: 534,
           isPublic: true,
           createdBy: 'system',
@@ -421,7 +421,7 @@ class SocialService {
           name: 'Creative Collective',
           description: 'Daily creative practices, art, writing, and expression',
           category: 'creative',
-          emoji: '🎨',
+          emoji: 'draw',
           memberCount: 398,
           isPublic: true,
           createdBy: 'system',
@@ -434,7 +434,7 @@ class SocialService {
           name: 'Social Connectors',
           description: 'Building relationships and social habits',
           category: 'social',
-          emoji: '🤝',
+          emoji: 'people',
           memberCount: 267,
           isPublic: true,
           createdBy: 'system',

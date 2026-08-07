@@ -392,14 +392,14 @@ class HealthService {
           unit: 'minutes',
         };
 
-      case HealthDataType.SLEEP_DURATION:
+      case HealthDataType.SLEEP_DURATION: {
         const sleepHours = summary.sleepDuration / 60;
         return {
           achieved: targetValue ? sleepHours >= targetValue : sleepHours >= 7, // Default 7 hours
           actualValue: sleepHours,
           unit: 'hours',
         };
-
+      }
       default:
         throw new Error(`Health data type ${healthDataType} not implemented`);
     }

@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { dataService } from '../../services/core';
 import { Screen, AppHeader, Card, Button, Stat, useTabBarHeight } from '../../components/ds';
+import { Glyph, GlyphName, mix } from '../../components/art';
 
 // Read from app.json rather than a hardcoded string that drifts out of date.
 const appVersion = Constants.expoConfig?.version ?? '1.0.0';
@@ -15,7 +16,9 @@ const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 type ProfileScreenProps = MainTabScreenProps<'Profile'>;
 
 interface SettingRow {
-  emoji: string;
+  icon: GlyphName;
+  /** Optional accent for the row's tile; falls back to the theme primary. */
+  accent?: string;
   label: string;
   detail?: string;
   isNew?: boolean;
@@ -26,6 +29,29 @@ interface SettingGroup {
   title: string;
   rows: SettingRow[];
 }
+
+/**
+ * Settings rows used to share one grey tile. Giving each its own accent tint
+ * lets the eye find a row by colour on a long list, without adding weight.
+ */
+const RowIcon: React.FC<{ icon: GlyphName; accent: string }> = ({ icon, accent }) => {
+  const t = useTheme();
+  const tile = mix(accent, 0.13, t.colors.bgPaper);
+  return (
+    <View
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        backgroundColor: tile,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Glyph name={icon} size={18} color={accent} surface={tile} />
+    </View>
+  );
+};
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const t = useTheme();
@@ -60,38 +86,38 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     {
       title: 'Practice',
       rows: [
-        { emoji: '🎯', label: 'Habits & templates', onPress: () => navigation.navigate('HabitTemplates') },
+        { icon: 'templates', accent: t.colors.primary, label: 'Habits & templates', onPress: () => navigation.navigate('HabitTemplates') },
       ],
     },
     {
       title: 'Insights',
       rows: [
-        { emoji: '📊', label: 'Analytics', onPress: () => navigation.navigate('Analytics') },
-        { emoji: '✨', label: 'AI insights', onPress: () => navigation.navigate('AIInsights') },
-        { emoji: '🏆', label: 'Achievements', onPress: () => navigation.navigate('Achievements') },
+        { icon: 'analytics', accent: t.colors.habits.sky, label: 'Analytics', onPress: () => navigation.navigate('Analytics') },
+        { icon: 'sparkle', accent: t.colors.habits.violet, label: 'AI insights', onPress: () => navigation.navigate('AIInsights') },
+        { icon: 'trophy', accent: t.colors.amber, label: 'Achievements', onPress: () => navigation.navigate('Achievements') },
       ],
     },
     {
       title: 'Notifications',
       rows: [
-        { emoji: '🔔', label: 'Reminders', onPress: () => navigation.navigate('NotificationSettingsNew') },
-        { emoji: '🌅', label: 'Smart notifications', onPress: () => navigation.navigate('HabitNotificationSettings') },
+        { icon: 'bell', accent: t.colors.rose, label: 'Reminders', onPress: () => navigation.navigate('NotificationSettingsNew') },
+        { icon: 'sunrise', accent: t.colors.amber, label: 'Smart notifications', onPress: () => navigation.navigate('HabitNotificationSettings') },
       ],
     },
     {
       title: 'Privacy & data',
       rows: [
-        { emoji: '🛡️', label: 'Privacy & security', onPress: () => navigation.navigate('PrivacySecurity') },
-        { emoji: '💾', label: 'Export & backup', onPress: () => navigation.navigate('DataManagement') },
+        { icon: 'shield', accent: t.colors.sage, label: 'Privacy & security', onPress: () => navigation.navigate('PrivacySecurity') },
+        { icon: 'archive', accent: t.colors.slate, label: 'Export & backup', onPress: () => navigation.navigate('DataManagement') },
       ],
     },
     {
       title: 'Support',
       rows: [
-        { emoji: '📱', label: 'About iTrackHabit', detail: appVersion },
+        { icon: 'device', accent: t.colors.slate, label: 'About iTrackHabit', detail: appVersion },
         // Debug-only: creates and deletes mock users, never ship this to users.
         ...(__DEV__
-          ? [{ emoji: '🛠', label: 'Developer tools', onPress: () => navigation.navigate('DeveloperTools') }]
+          ? [{ icon: 'tune' as GlyphName, accent: t.colors.habits.clay, label: 'Developer tools', onPress: () => navigation.navigate('DeveloperTools') }]
           : []),
       ],
     },
@@ -204,18 +230,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     opacity: pressed ? 0.6 : 1,
                   })}
                 >
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 10,
-                      backgroundColor: t.colors.bgPaper,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{row.emoji}</Text>
-                  </View>
+                  <RowIcon icon={row.icon} accent={row.accent ?? t.colors.primary} />
                   <Text style={{ flex: 1, color: t.colors.ink, fontSize: 15 }}>{row.label}</Text>
                   {row.isNew && (
                     <View

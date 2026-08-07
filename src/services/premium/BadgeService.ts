@@ -126,14 +126,14 @@ class BadgeService {
 
     try {
       switch (badge.type) {
-        case 'streak':
+        case 'streak': {
           // Calculate longest streak
           const streaks = userHabits.map(habit =>
             this.calculateStreakForHabit(habit, habitProgress)
           );
           currentValue = Math.max(...streaks, 0);
           break;
-
+        }
         case 'completion':
           // Calculate total completions
           currentValue = habitProgress.filter(p => p.status === 'done').length;
@@ -149,7 +149,7 @@ class BadgeService {
           currentValue = challenges.filter(c => c.status === 'completed').length;
           break;
 
-        case 'consistency':
+        case 'consistency': {
           // Calculate consistency percentage
           const totalDays = this.getDaysBetween(
             new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
@@ -162,7 +162,7 @@ class BadgeService {
           ).size;
           currentValue = Math.round((completedDays / totalDays) * 100);
           break;
-
+        }
         default:
           currentValue = 0;
       }

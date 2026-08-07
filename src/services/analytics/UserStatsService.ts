@@ -197,7 +197,7 @@ class UserStatsService {
 
     // Use cached stats if available to avoid recursion
     if (this.cachedStats && this.cachedStats.currentStreak > 0) {
-      return `${timeGreeting}! 🔥 ${this.cachedStats.currentStreak} day streak`;
+      return `${timeGreeting}! ${this.cachedStats.currentStreak} day streak`;
     }
 
     const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
@@ -222,7 +222,7 @@ class UserStatsService {
     }
     
     const wasYesterdayPerfect = habits.length > 0 && completedYesterday === habits.length;
-    return wasYesterdayPerfect ? 'Yesterday ✨' : 'Today';
+    return wasYesterdayPerfect ? 'Yesterday' : 'Today';
   }
 
   invalidateCache(): void {

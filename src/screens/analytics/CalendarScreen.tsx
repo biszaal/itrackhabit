@@ -6,6 +6,7 @@ import { MainTabScreenProps } from '../../types/navigation';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, Card, AppHeader, Chip, useTabBarHeight } from '../../components/ds';
+import { Glyph, HabitIcon, resolveGlyph } from '../../components/art';
 import { toLocalISODate } from '../../utils/formatting/time';
 
 type CalendarScreenProps = MainTabScreenProps<'Calendar'>;
@@ -161,13 +162,23 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
           <Chip label="● Overall" active={filter === 'Overall'} onPress={() => setFilter('Overall')} />
           {habits.slice(0, 8).map((h) => {
             const name = h.title ?? h.name;
+            const active = filter === name;
+            const accent = h.color || t.colors.primary;
             return (
               <Chip
                 key={h.id}
-                label={`${h.emoji || '🎯'} ${name}`}
-                active={filter === name}
+                label={name}
+                icon={
+                  <Glyph
+                    name={resolveGlyph(h.emoji, name)}
+                    size={14}
+                    color={active ? t.colors.bg : accent}
+                    surface={active ? t.colors.ink : t.colors.bgPaper}
+                  />
+                }
+                active={active}
                 onPress={() => setFilter(name)}
-                color={h.color || t.colors.primary}
+                color={accent}
               />
             );
           })}
@@ -321,18 +332,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({ navigation }) =>
                     borderTopColor: t.colors.lineSoft,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 10,
-                      backgroundColor: tint(c, 0.14, t.colors.bgPaper),
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 16 }}>{h.emoji || '🎯'}</Text>
-                  </View>
+                  <HabitIcon icon={h.emoji} name={name} color={c} size={32} />
                   <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: t.colors.ink }} numberOfLines={1}>
                     {name}
                   </Text>

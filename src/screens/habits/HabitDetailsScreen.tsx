@@ -7,22 +7,10 @@ import { RootStackScreenProps } from '../../types/navigation';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, Card, Button, Stat, HeatGrid, Chip } from '../../components/ds';
+import { Glyph, Illustration, resolveGlyph } from '../../components/art';
 import { toLocalISODate } from '../../utils/formatting/time';
 
 type HabitDetailsScreenProps = RootStackScreenProps<'HabitDetails'>;
-
-const emojiFor = (title: string): string => {
-  const t = (title || '').toLowerCase();
-  if (t.includes('run')) return '🏃';
-  if (t.includes('read') || t.includes('book')) return '📚';
-  if (t.includes('meditat')) return '🧘';
-  if (t.includes('exercise')) return '💪';
-  if (t.includes('water') || t.includes('hydrat')) return '💧';
-  if (t.includes('sleep')) return '🌙';
-  if (t.includes('walk')) return '🚶';
-  if (t.includes('write') || t.includes('journal')) return '✍️';
-  return '🎯';
-};
 
 const tint = (hex: string, ratio: number, bg = '#FFFFFF'): string => {
   const h = hex.replace('#', '');
@@ -60,6 +48,36 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
   const [notes, setNotes] = useState<Note[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [progress, setProgress] = useState<Progress[]>([]);
+  // Step *definitions* live on the habit; which are ticked is per-day, so it
+  // comes from today's progress record and resets each morning.
+  const [stepsDone, setStepsDone] = useState<string[]>([]);
+
+  const microSteps = habit?.microSteps ?? [];
+
+  const toggleMicroStep = async (stepId: string) => {
+    const today = toLocalISODate();
+    const next = stepsDone.includes(stepId)
+      ? stepsDone.filter((id) => id !== stepId)
+      : [...stepsDone, stepId];
+
+    const previous = stepsDone;
+    setStepsDone(next); // optimistic — a checkbox should respond immediately
+
+    try {
+      // Preserve the day's status: ticking a step is not the same as
+      // completing the habit.
+      const todayRecord = progress.find((p) => p.date === today);
+      await dataService.markHabitProgress(
+        habitId,
+        today,
+        (todayRecord?.status as any) ?? 'partial',
+        { microStepsDone: next }
+      );
+    } catch {
+      setStepsDone(previous);
+      Alert.alert('Sorry', 'Could not save that step. Try again.');
+    }
+  };
 
   const accent = habit?.color || t.colors.primary;
   const isDayOne = (habit?.totalCompletions ?? 0) === 0 && (habit?.currentStreak ?? 0) === 0;
@@ -88,6 +106,8 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
         } else {
           setHabit(found as HabitWithStats);
           setProgress(records);
+          const todayRecord = records.find((r) => r.date === toLocalISODate());
+          setStepsDone(todayRecord?.microStepsDone ?? []);
           setNotes(
             records
               .filter((r) => (r.notes ?? '').trim().length > 0)
@@ -365,7 +385,12 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
                 t.shadow.sh1,
               ]}
             >
-              <Text style={{ fontSize: 36 }}>{habit.emoji || emojiFor(habit.title)}</Text>
+              <Glyph
+                name={resolveGlyph(habit.emoji, habit.title)}
+                size={36}
+                color={accent}
+                surface={tint(accent, 0.18, t.colors.bgElev)}
+              />
             </View>
             <View style={{ flex: 1 }}>
               <Text
@@ -418,7 +443,12 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
           {/* Day-one empty state for new habits */}
           {isDayOne && (
             <Card variant="flat" padding={24} style={{ marginTop: 18, alignItems: 'center', gap: 12 }}>
-              <Text style={{ fontSize: 48 }}>🌱</Text>
+              <Illustration
+                name="firstHabit"
+                width={172}
+                color={accent}
+                surface={t.colors.bgPaper}
+              />
               <Text
                 style={{
                   color: t.colors.ink,
@@ -509,7 +539,7 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
             </Text>
           </Card>
 
-          {/* Micro-steps placeholder */}
+          {/* Micro-steps */}
           <Card variant="elevated" padding={18} style={{ marginTop: 14 }}>
             <View
               style={{
@@ -522,11 +552,72 @@ export const HabitDetailsScreen: React.FC<HabitDetailsScreenProps> = ({ navigati
               <Text style={{ color: t.colors.ink, fontSize: 17, fontWeight: '600', letterSpacing: -0.2 }}>
                 Micro-steps
               </Text>
-              <Chip label="0 / 0" />
+              {microSteps.length > 0 && (
+                <Chip label={`${stepsDone.length} / ${microSteps.length}`} />
+              )}
             </View>
-            <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2 }}>
-              Break this habit into 2–4 tiny steps. Edit the habit to add them.
-            </Text>
+
+            {microSteps.length === 0 ? (
+              <>
+                <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2 }}>
+                  Break this habit into a few tiny actions, then tick them off as
+                  you go.
+                </Text>
+                <Button
+                  title="Add steps"
+                  variant="secondary"
+                  size="sm"
+                  onPress={handleEdit}
+                  style={{ alignSelf: 'flex-start', marginTop: 12 }}
+                />
+              </>
+            ) : (
+              <View style={{ marginTop: 4 }}>
+                {microSteps.map((step) => {
+                  const checked = stepsDone.includes(step.id);
+                  return (
+                    <Pressable
+                      key={step.id}
+                      onPress={() => toggleMicroStep(step.id)}
+                      accessibilityRole="checkbox"
+                      accessibilityLabel={step.title}
+                      accessibilityState={{ checked }}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                        paddingVertical: 10,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 8,
+                          borderWidth: 1.5,
+                          borderColor: checked ? accent : t.colors.line,
+                          backgroundColor: checked ? accent : 'transparent',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {checked && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
+                      </View>
+                      <Text
+                        style={{
+                          flex: 1,
+                          color: checked ? t.colors.ink3 : t.colors.ink,
+                          fontSize: 14,
+                          textDecorationLine: checked ? 'line-through' : 'none',
+                        }}
+                      >
+                        {step.title}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </Card>
 
           {/* Recent notes */}

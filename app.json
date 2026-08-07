@@ -21,7 +21,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.biszaal.itrackhabit",
-      "buildNumber": "23",
+      "buildNumber": "24",
       "requireFullScreen": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -88,7 +88,7 @@
         "projectId": "835bd309-fdb9-4959-9b4c-030358bb120b"
       }
     },
-    "owner": "biszaal",
+    "owner": "biszaaltech",
     "primaryColor": "#6366F1",
     "scheme": "itrackhabit",
     "githubUrl": "https://github.com/biszaal/iTrackHabit"

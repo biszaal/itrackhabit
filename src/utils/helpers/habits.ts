@@ -7,41 +7,9 @@ import { HABIT_TYPES } from "../../constants/app";
 import { FrequencyType } from "../../types";
 import { toLocalISODate } from '../formatting/time';
 
-export const getDefaultHabitEmoji = (title: string): string => {
-  const titleLower = (title || "").toLowerCase();
-
-  // Exercise & Fitness
-  if (titleLower.includes("exercise") || titleLower.includes("workout"))
-    return "💪";
-  if (titleLower.includes("run")) return "🏃";
-  if (titleLower.includes("walk")) return "🚶";
-  if (titleLower.includes("yoga")) return "🧘‍♀️";
-  if (titleLower.includes("gym")) return "🏋️";
-
-  // Learning & Reading
-  if (titleLower.includes("read")) return "📖";
-  if (titleLower.includes("study")) return "📚";
-  if (titleLower.includes("learn")) return "🎓";
-  if (titleLower.includes("write")) return "✍️";
-
-  // Wellness & Health
-  if (titleLower.includes("meditat")) return "🧘";
-  if (titleLower.includes("water")) return "💧";
-  if (titleLower.includes("sleep")) return "🛏️";
-  if (titleLower.includes("vitamin")) return "💊";
-
-  // Productivity
-  if (titleLower.includes("work") || titleLower.includes("task")) return "💼";
-  if (titleLower.includes("organize") || titleLower.includes("clean"))
-    return "🗂️";
-
-  // Social & Creative
-  if (titleLower.includes("call") || titleLower.includes("friend")) return "📞";
-  if (titleLower.includes("music") || titleLower.includes("play")) return "🎵";
-  if (titleLower.includes("draw") || titleLower.includes("paint")) return "🎨";
-
-  return "🎯"; // Default
-};
+// `getDefaultHabitEmoji` lived here. Icon inference now belongs to the art
+// module — see `glyphFromTitle` in components/art/resolveGlyph.ts, which covers
+// the same keywords and returns a glyph name instead of an emoji.
 
 export const getHabitTypeColor = (type: string): string => {
   switch (type) {

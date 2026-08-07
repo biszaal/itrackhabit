@@ -65,7 +65,23 @@ export interface Habit {
   healthConfig?: HealthHabitConfig;
   targetConfig?: HabitTargetConfig; // For manual habits with measurable targets
   color?: string; // Habit color for visual distinction
-  emoji?: string; // Habit emoji for visual representation
+  /**
+   * The habit's icon. Stores a glyph name for anything created since the
+   * illustration system landed; older rows may still hold an emoji, which
+   * `resolveGlyph` translates on read.
+   */
+  emoji?: string;
+  /**
+   * Two to four tiny actions the habit breaks down into. Optional — a habit
+   * without them simply shows no checklist.
+   */
+  microSteps?: MicroStep[];
+}
+
+/** A single tiny action within a habit. */
+export interface MicroStep {
+  id: string;
+  title: string;
 }
 
 export interface HabitTargetConfig {
@@ -96,6 +112,12 @@ export interface HabitProgress {
   targetValue?: number; // Target value from habit config
   unit?: string; // Unit from habit config (minutes, pages, etc.)
   notes?: string;
+  /**
+   * Ids of the habit's micro-steps ticked off on this date. Completion is
+   * per-day, so the checklist resets each morning while the step definitions
+   * stay on the habit.
+   */
+  microStepsDone?: string[];
   updatedAt: string;
   pending: boolean;
   serverId?: string;

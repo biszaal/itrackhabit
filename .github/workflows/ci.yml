@@ -24,6 +24,11 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      # Errors only. The warning backlog (`any`, unused vars in legacy
+      # services) is tracked but must not block a build.
+      - name: Lint
+        run: npx eslint src/ tests/ --quiet
+
       # Streak math is keyed on local calendar days, so a UTC-only runner
       # would not catch the off-by-one it is most prone to.
       - name: Test (UTC)
@@ -40,6 +45,13 @@ jobs:
         run: npx jest --ci
         env:
           TZ: Pacific/Auckland
+
+      # Thresholds are a ratchet pinned just under current coverage, so this
+      # fails on regression rather than aspiring to a number nobody meets.
+      - name: Coverage
+        run: npx jest --ci --coverage
+        env:
+          TZ: UTC
 
       # Catches broken imports and dead route references that tsc misses.
       - name: Bundle for iOS

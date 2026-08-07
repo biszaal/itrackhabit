@@ -313,7 +313,7 @@ class ConflictResolverService {
       let resolution: ConflictResolution;
 
       switch (strategy) {
-        case 'auto':
+        case 'auto': {
           // Use recommended strategy
           const recommended = this.getRecommendedStrategy(conflict);
           if (recommended === 'merge') {
@@ -329,7 +329,7 @@ class ConflictResolverService {
             };
           }
           break;
-
+        }
         case 'local_preference':
           resolution = { strategy: 'local_wins', resolvedData: conflict.localData };
           break;

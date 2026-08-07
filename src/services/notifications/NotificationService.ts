@@ -381,7 +381,7 @@ export const NotificationTemplates = {
 
   badgeEarned: (badgeName: string, badgeId: string): Omit<PushNotificationData, 'userId'> => ({
     type: 'badge_earned',
-    title: 'New Badge Earned! 🏆',
+    title: 'New badge earned',
     body: `Congratulations! You earned the "${badgeName}" badge!`,
     data: { badgeId },
     priority: 'high',

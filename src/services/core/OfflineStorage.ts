@@ -103,6 +103,8 @@ class OfflineStorageService {
       healthConfig: habit.healthConfig,
       targetConfig: habit.targetConfig,
       color: habit.color || "#4CAF50",
+      emoji: habit.emoji,
+      microSteps: habit.microSteps,
       createdAt: habit.createdAt || new Date().toISOString(),
       updatedAt: habit.updatedAt || new Date().toISOString(),
       deletedAt: habit.deletedAt,
@@ -183,6 +185,28 @@ class OfflineStorageService {
           "ALTER TABLE habits ADD COLUMN targetConfig TEXT"
         );
       }
+
+      // The icon the user picked was written by the UI but had nowhere to
+      // land, so every choice was silently dropped and the list fell back to
+      // guessing a glyph from the title.
+      if (!habitColumns.includes("emoji")) {
+        console.log("🖼️ Adding emoji column to habits table...");
+        await this.db.execAsync("ALTER TABLE habits ADD COLUMN emoji TEXT");
+      }
+
+      if (!habitColumns.includes("microSteps")) {
+        console.log("🪜 Adding microSteps column to habits table...");
+        await this.db.execAsync(
+          "ALTER TABLE habits ADD COLUMN microSteps TEXT"
+        );
+      }
+
+      if (!columns.includes("microStepsDone")) {
+        console.log("🪜 Adding microStepsDone column to habit_progress...");
+        await this.db.execAsync(
+          "ALTER TABLE habit_progress ADD COLUMN microStepsDone TEXT"
+        );
+      }
     } catch (error) {
       console.log("📝 Schema check completed with minor issues:", error);
       // Non-critical errors can be ignored
@@ -221,6 +245,8 @@ class OfflineStorageService {
         healthConfig TEXT,
         targetConfig TEXT,
         color TEXT,
+        emoji TEXT,
+        microSteps TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
         deletedAt TEXT,
@@ -242,6 +268,7 @@ class OfflineStorageService {
         targetValue REAL,
         unit TEXT,
         notes TEXT,
+        microStepsDone TEXT,
         updatedAt TEXT NOT NULL,
         pending INTEGER DEFAULT 0,
         serverId TEXT,
@@ -310,6 +337,9 @@ class OfflineStorageService {
     const targetConfigJson = ensuredHabit.targetConfig
       ? JSON.stringify(ensuredHabit.targetConfig)
       : null;
+    const microStepsJson = ensuredHabit.microSteps?.length
+      ? JSON.stringify(ensuredHabit.microSteps)
+      : null;
 
     console.log("🔄 About to execute database INSERT OR REPLACE...");
 
@@ -317,8 +347,8 @@ class OfflineStorageService {
       // Simple database operation without transaction wrapper
       await this.db.runAsync(
         `INSERT OR REPLACE INTO habits 
-         (id, userId, title, notes, frequency, isShared, type, healthConfig, targetConfig, color, createdAt, updatedAt, deletedAt, pending, serverId)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, userId, title, notes, frequency, isShared, type, healthConfig, targetConfig, color, emoji, microSteps, createdAt, updatedAt, deletedAt, pending, serverId)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           ensuredHabit.id,
           ensuredHabit.userId,
@@ -330,6 +360,8 @@ class OfflineStorageService {
           healthConfigJson,
           targetConfigJson,
           ensuredHabit.color || null,
+          ensuredHabit.emoji || null,
+          microStepsJson,
           ensuredHabit.createdAt,
           ensuredHabit.updatedAt,
           ensuredHabit.deletedAt || null,
@@ -354,8 +386,8 @@ class OfflineStorageService {
           // Retry the operation once
           await this.db!.runAsync(
             `INSERT OR REPLACE INTO habits 
-             (id, userId, title, notes, frequency, isShared, type, healthConfig, targetConfig, color, createdAt, updatedAt, deletedAt, pending, serverId)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (id, userId, title, notes, frequency, isShared, type, healthConfig, targetConfig, color, emoji, microSteps, createdAt, updatedAt, deletedAt, pending, serverId)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               ensuredHabit.id,
               ensuredHabit.userId,
@@ -367,6 +399,8 @@ class OfflineStorageService {
               healthConfigJson,
               targetConfigJson,
               ensuredHabit.color || null,
+              ensuredHabit.emoji || null,
+              microStepsJson,
               ensuredHabit.createdAt,
               ensuredHabit.updatedAt,
               ensuredHabit.deletedAt || null,
@@ -533,6 +567,8 @@ class OfflineStorageService {
       pending: row.pending === 1,
       serverId: row.serverId,
       color: row.color,
+      emoji: row.emoji ?? undefined,
+      microSteps: row.microSteps ? JSON.parse(row.microSteps) : undefined,
     } as any;
   }
 
@@ -547,9 +583,9 @@ class OfflineStorageService {
     if (!this.db) throw new Error("Database not initialized");
 
     await this.db.runAsync(
-      `INSERT OR REPLACE INTO habit_progress 
-       (id, habitId, date, status, currentValue, targetValue, unit, notes, updatedAt, pending, serverId)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO habit_progress
+       (id, habitId, date, status, currentValue, targetValue, unit, notes, microStepsDone, updatedAt, pending, serverId)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         progress.id,
         progress.habitId,
@@ -559,6 +595,9 @@ class OfflineStorageService {
         progress.targetValue || null,
         progress.unit || null,
         progress.notes || null,
+        progress.microStepsDone?.length
+          ? JSON.stringify(progress.microStepsDone)
+          : null,
         progress.updatedAt,
         progress.pending ? 1 : 0,
         progress.serverId || null,
@@ -810,6 +849,9 @@ class OfflineStorageService {
       targetValue: row.targetValue,
       unit: row.unit,
       notes: row.notes,
+      microStepsDone: row.microStepsDone
+        ? JSON.parse(row.microStepsDone)
+        : undefined,
       updatedAt: row.updatedAt,
       pending: row.pending === 1,
     };

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FrequencyType, HabitType } from '../../types';
+import { FrequencyType, HabitType, MicroStep } from '../../types';
 import { RootStackScreenProps } from '../../types/navigation';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Button, Field, HabitRow } from '../../components/ds';
+import { v4 as uuidv4 } from 'uuid';
+import { Glyph, GlyphName, resolveGlyph } from '../../components/art';
 
 type CreateEditHabitScreenProps =
   | RootStackScreenProps<'CreateHabit'>
@@ -19,15 +21,43 @@ const FREQS: { label: string; value: FrequencyType }[] = [
   { label: 'Custom', value: 'custom' },
 ];
 
-const EMOJI_OPTIONS = ['🧘', '🏃', '📚', '💧', '✍️', '🌙', '🥗', '🎯', '💪', '🚶', '🛏️', '🎵'];
+const ICON_OPTIONS: GlyphName[] = [
+  'target',
+  'run',
+  'walk',
+  'strength',
+  'stretch',
+  'bike',
+  'meditate',
+  'breathe',
+  'water',
+  'nutrition',
+  'sleep',
+  'read',
+  'study',
+  'write',
+  'journal',
+  'music',
+  'draw',
+  'code',
+  'work',
+  'plan',
+  'people',
+  'nature',
+  'sunrise',
+  'offline',
+];
 
-const CATEGORIES = [
-  { emoji: '🏃', label: 'Fitness' },
-  { emoji: '🧠', label: 'Mind' },
-  { emoji: '📚', label: 'Learn' },
-  { emoji: '🥗', label: 'Health' },
-  { emoji: '💼', label: 'Work' },
-  { emoji: '💤', label: 'Rest' },
+// Atomic Habits advises two to four; more than that stops being 'tiny'.
+const MAX_MICRO_STEPS = 4;
+
+const CATEGORIES: { icon: GlyphName; label: string }[] = [
+  { icon: 'run', label: 'Fitness' },
+  { icon: 'brain', label: 'Mind' },
+  { icon: 'study', label: 'Learn' },
+  { icon: 'nutrition', label: 'Health' },
+  { icon: 'work', label: 'Work' },
+  { icon: 'sleep', label: 'Rest' },
 ];
 
 const UNITS = ['times', 'minutes', 'pages', 'glasses', 'reps', 'km'];
@@ -44,7 +74,11 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
 
   const [title, setTitle] = useState(existing?.title ?? template?.title ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? template?.notes ?? '');
-  const [emoji, setEmoji] = useState(existing?.emoji ?? template?.emoji ?? '🎯');
+  // An existing habit may still carry a legacy emoji, so normalise on load —
+  // otherwise nothing in the picker would appear selected.
+  const [icon, setIcon] = useState<GlyphName>(() =>
+    resolveGlyph(existing?.emoji ?? template?.emoji, existing?.title ?? template?.title)
+  );
   const [color, setColor] = useState(existing?.color ?? template?.color ?? t.habitColors[0]);
   const [frequency, setFrequency] = useState<FrequencyType>(existing?.frequency ?? template?.frequency ?? 'daily');
   const [habitType, setHabitType] = useState<HabitType>(existing?.type ?? 'manual');
@@ -52,7 +86,22 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
   const [targetUnit, setTargetUnit] = useState<string>(existing?.targetConfig?.unit ?? 'times');
   const [isTimeBased, setIsTimeBased] = useState<boolean>(!!existing?.targetConfig?.isTimeBased);
   const [category, setCategory] = useState<string | null>(null);
+  const [microSteps, setMicroSteps] = useState<MicroStep[]>(
+    () => existing?.microSteps ?? []
+  );
+  const [newStep, setNewStep] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const addMicroStep = () => {
+    const title = newStep.trim();
+    if (!title || microSteps.length >= MAX_MICRO_STEPS) return;
+    setMicroSteps((prev) => [...prev, { id: uuidv4(), title }]);
+    setNewStep('');
+  };
+
+  const removeMicroStep = (id: string) => {
+    setMicroSteps((prev) => prev.filter((s) => s.id !== id));
+  };
 
   useEffect(() => {
     navigation.setOptions?.({ headerShown: false });
@@ -71,7 +120,8 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
         frequency,
         type: habitType,
         color,
-        emoji,
+        emoji: icon,
+        microSteps,
         isShared: existing?.isShared ?? false,
         targetConfig: {
           hasTarget: true,
@@ -133,7 +183,7 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
             Keep it small. "Read 1 page" beats "Read more".
           </Text>
 
-          {/* Name + emoji */}
+          {/* Name + icon */}
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View
               style={{
@@ -147,37 +197,43 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontSize: 30 }}>{emoji}</Text>
+              <Glyph name={icon} size={34} color={color} surface={tint(color, 0.16, t.colors.bgPaper)} />
             </View>
             <View style={{ flex: 1 }}>
               <Field placeholder="Run in the morning" value={title} onChangeText={setTitle} autoFocus />
             </View>
           </View>
 
-          {/* Emoji */}
-          <Text style={labelStyle(t)}>Emoji</Text>
+          {/* Icon */}
+          <Text style={labelStyle(t)}>Icon</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {EMOJI_OPTIONS.map((e) => {
-              const sel = e === emoji;
+            {ICON_OPTIONS.map((g) => {
+              const sel = g === icon;
+              const surface = sel ? t.colors.bgElev : t.colors.bgPaper;
               return (
                 <Pressable
-                  key={e}
-                  onPress={() => setEmoji(e)}
+                  key={g}
+                  onPress={() => setIcon(g)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Emoji ${e}`}
-                  accessibilityState={{ selected: emoji === e }}
+                  accessibilityLabel={`${g} icon`}
+                  accessibilityState={{ selected: sel }}
                   style={{
                     width: 56,
                     height: 56,
                     borderRadius: 14,
-                    backgroundColor: sel ? t.colors.bgElev : t.colors.bgPaper,
+                    backgroundColor: surface,
                     borderWidth: sel ? 1.5 : 0,
                     borderColor: sel ? color : 'transparent',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>{e}</Text>
+                  <Glyph
+                    name={g}
+                    size={26}
+                    color={sel ? color : t.colors.ink2}
+                    surface={surface}
+                  />
                 </Pressable>
               );
             })}
@@ -237,7 +293,12 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
                     gap: 6,
                   }}
                 >
-                  <Text style={{ fontSize: 14 }}>{c.emoji}</Text>
+                  <Glyph
+                    name={c.icon}
+                    size={16}
+                    color={active ? '#FFFFFF' : t.colors.ink2}
+                    surface={active ? t.colors.primary : t.colors.bgPaper}
+                  />
                   <Text style={{ color: active ? '#FFFFFF' : t.colors.ink2, fontSize: 13, fontWeight: '600' }}>{c.label}</Text>
                 </Pressable>
               );
@@ -379,10 +440,68 @@ export const CreateEditHabitScreen: React.FC<CreateEditHabitScreenProps> = ({ na
           <Text style={labelStyle(t)}>Notes (optional)</Text>
           <Field placeholder="Why does this matter?" value={notes} onChangeText={setNotes} multiline />
 
+          {/* Micro-steps */}
+          <Text style={labelStyle(t)}>Micro-steps (optional)</Text>
+          <Text style={{ color: t.colors.ink2, fontSize: 13, marginBottom: 10 }}>
+            Break this into up to {MAX_MICRO_STEPS} tiny actions. You can tick them
+            off each day on the habit's page.
+          </Text>
+
+          {microSteps.map((step, i) => (
+            <View
+              key={step.id}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                marginBottom: 8,
+                borderRadius: t.radius.input,
+                backgroundColor: t.colors.bgPaper,
+              }}
+            >
+              <Text style={{ color: t.colors.ink3, fontSize: 13, fontWeight: '700' }}>{i + 1}</Text>
+              <Text style={{ flex: 1, color: t.colors.ink, fontSize: 14 }} numberOfLines={2}>
+                {step.title}
+              </Text>
+              <Pressable
+                onPress={() => removeMicroStep(step.id)}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove step ${step.title}`}
+              >
+                <Ionicons name="close" size={18} color={t.colors.ink3} />
+              </Pressable>
+            </View>
+          ))}
+
+          {microSteps.length < MAX_MICRO_STEPS && (
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <Field
+                  placeholder={microSteps.length === 0 ? 'Put my running shoes on' : 'Add another step'}
+                  value={newStep}
+                  onChangeText={setNewStep}
+                  onSubmitEditing={addMicroStep}
+                  returnKeyType="done"
+                />
+              </View>
+              <Button
+                title="Add"
+                variant="secondary"
+                size="sm"
+                onPress={addMicroStep}
+                disabled={!newStep.trim()}
+                accessibilityLabel="Add micro-step"
+              />
+            </View>
+          )}
+
           {/* Preview */}
           <Text style={labelStyle(t)}>Preview</Text>
           <HabitRow
-            emoji={emoji}
+            icon={icon}
             name={title || 'New habit'}
             target={`${frequency === 'daily' ? 'Daily' : frequency === 'weekly' ? 'Weekly' : 'Custom'} · ${targetValue} ${isTimeBased ? 'min' : targetUnit}`}
             color={color}

@@ -242,7 +242,7 @@ class EnhancedNotificationService {
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: `Don't break your ${habitStat.currentStreak}-day streak! 🔥`,
+          title: `Don't break your ${habitStat.currentStreak}-day streak`,
           body: `You haven't completed "${habit.title}" today. Keep your momentum going!`,
           data: {
             habitId: habit.id,
@@ -374,7 +374,7 @@ class EnhancedNotificationService {
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: '📊 Your Weekly Habit Summary',
+          title: 'Your weekly habit summary',
           body: 'Check out your progress and achievements from this week!',
           data: {
             type: 'weekly_summary',

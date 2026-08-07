@@ -11,6 +11,7 @@ import {
 } from '../../services/analytics';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Button } from '../../components/ds';
+import { Glyph, GlyphName, Medallion, resolveGlyph } from '../../components/art';
 
 type AIInsightsScreenProps = RootStackScreenProps<'AIInsights'>;
 
@@ -130,13 +131,18 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
           <View style={{ marginTop: 16, gap: 10 }}>
             {tab === 'insights' &&
               (insights.length === 0 ? (
-                <EmptyState emoji="✨" title="No insights yet" message="Complete more habits to generate personalized patterns." />
+                <EmptyState glyph="sparkle" title="No insights yet" message="Complete more habits to generate personalized patterns." />
               ) : (
                 insights.map((it, i) => (
                   <Card key={i} variant="elevated" padding={16} style={{ position: 'relative', overflow: 'hidden' }}>
                     <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, backgroundColor: t.colors.primary }} />
                     <View style={{ flexDirection: 'row', gap: 12, paddingLeft: 6 }}>
-                      <Text style={{ fontSize: 24 }}>{(it as any).emoji ?? '✨'}</Text>
+                      <Glyph
+                        name={resolveGlyph((it as any).emoji, (it as any).title)}
+                        size={26}
+                        color={t.colors.primary}
+                        surface={t.colors.bgElev}
+                      />
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>{(it as any).title}</Text>
                         <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2, lineHeight: 18 }}>
@@ -150,7 +156,7 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
 
             {tab === 'recs' &&
               (recs.length === 0 ? (
-                <EmptyState emoji="💡" title="No recommendations" message="Add a few habits to get suggestions." />
+                <EmptyState glyph="bulb" title="No recommendations" message="Add a few habits to get suggestions." />
               ) : (
                 recs.map((r, i) => (
                   <Card key={i} variant="elevated" padding={16}>
@@ -176,7 +182,7 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
 
             {tab === 'coaching' &&
               (coaching.length === 0 ? (
-                <EmptyState emoji="🎓" title="Coach is quiet" message="Keep tracking — your coach will share tips soon." />
+                <EmptyState glyph="learn" title="Coach is quiet" message="Keep tracking — your coach will share tips soon." />
               ) : (
                 coaching.map((c, i) => (
                   <Card key={i} variant="elevated" padding={16}>
@@ -192,7 +198,7 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
 
             {tab === 'corr' &&
               (corr.length === 0 ? (
-                <EmptyState emoji="🔗" title="No correlations" message="Pairs of habits will show up here when patterns emerge." />
+                <EmptyState glyph="link" title="No correlations" message="Pairs of habits will show up here when patterns emerge." />
               ) : (
                 corr.map((c, i) => (
                   <Card key={i} variant="elevated" padding={16}>
@@ -214,11 +220,11 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
   );
 };
 
-const EmptyState: React.FC<{ emoji: string; title: string; message: string }> = ({ emoji, title, message }) => {
+const EmptyState: React.FC<{ glyph: GlyphName; title: string; message: string }> = ({ glyph, title, message }) => {
   const t = useTheme();
   return (
     <Card variant="flat" padding={28} style={{ alignItems: 'center', gap: 8 }}>
-      <Text style={{ fontSize: 40 }}>{emoji}</Text>
+      <Medallion glyph={glyph} size={104} surface={t.colors.bgPaper} />
       <Text style={{ color: t.colors.ink, fontSize: 18, fontWeight: '700' }}>{title}</Text>
       <Text style={{ color: t.colors.ink2, fontSize: 13, textAlign: 'center', maxWidth: 280 }}>{message}</Text>
     </Card>

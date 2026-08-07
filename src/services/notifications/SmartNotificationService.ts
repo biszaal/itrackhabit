@@ -346,7 +346,7 @@ export class SmartNotificationService {
     }
 
     const content: Notifications.NotificationContentInput = {
-      title: `🔥 Your ${context.currentStreak}-day streak needs you!`,
+      title: `Your ${context.currentStreak}-day streak needs you`,
       body: `Don't let your amazing ${context.habitName} streak end today. You've got this!`,
       data: { 
         type: 'streak_protection', 
@@ -412,10 +412,10 @@ export class SmartNotificationService {
    */
   private generateReminderTitle(context: HabitNotificationContext): string {
     const titles = [
-      `Time for ${context.habitName}! 💪`,
+      `Time for ${context.habitName}`,
       `Your ${context.habitName} awaits`,
       `Ready to ${context.habitName}?`,
-      `Let's do ${context.habitName} together! 🎯`,
+      `Let's do ${context.habitName} together`,
     ];
     
     return titles[Math.floor(Math.random() * titles.length)];
@@ -440,11 +440,11 @@ export class SmartNotificationService {
    */
   private generateMotivationalTitle(context: HabitNotificationContext): string {
     if (context.completionRate > 0.8) {
-      return "You're crushing it! 🌟";
+      return "You're crushing it!";
     } else if (context.completionRate > 0.5) {
-      return "Keep up the great work! 💪";
+      return "Keep up the great work!";
     } else {
-      return "Every journey starts with a step 🚀";
+      return "Every journey starts with a step";
     }
   }
 

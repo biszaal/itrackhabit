@@ -5,16 +5,17 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Button, Field } from '../../components/ds';
+import { Glyph, GlyphName, Illustration, resolveGlyph } from '../../components/art';
 import { dataService } from '../../services/core';
 import { HABIT_TEMPLATES, HabitTemplate } from '../../data/habitTemplates';
 
-const GOALS = [
-  { id: 'health', title: 'Health & Fitness', emoji: '💪' },
-  { id: 'productivity', title: 'Productivity', emoji: '🎯' },
-  { id: 'mindfulness', title: 'Mindfulness', emoji: '🧘' },
-  { id: 'learning', title: 'Learning', emoji: '📚' },
-  { id: 'creative', title: 'Creativity', emoji: '🎨' },
-  { id: 'social', title: 'Relationships', emoji: '👥' },
+const GOALS: { id: string; title: string; icon: GlyphName }[] = [
+  { id: 'health', title: 'Health & Fitness', icon: 'strength' },
+  { id: 'productivity', title: 'Productivity', icon: 'target' },
+  { id: 'mindfulness', title: 'Mindfulness', icon: 'meditate' },
+  { id: 'learning', title: 'Learning', icon: 'study' },
+  { id: 'creative', title: 'Creativity', icon: 'draw' },
+  { id: 'social', title: 'Relationships', icon: 'people' },
 ];
 
 const STEPS = ['welcome', 'name', 'goals', 'habits', 'ready'] as const;
@@ -91,7 +92,7 @@ const OnboardingScreen: React.FC = () => {
       }
       await AsyncStorage.setItem('onboarding_completed', 'true');
       Alert.alert(
-        '🎉 Welcome aboard!',
+        'Welcome aboard',
         `You've started with ${picked.length} habit${picked.length !== 1 ? 's' : ''}. Take it one day at a time.`,
         [{ text: "Let's go", onPress: () => navigation.navigate('Main') }]
       );
@@ -138,7 +139,7 @@ const OnboardingScreen: React.FC = () => {
       >
         {step === 'welcome' && (
           <View style={{ alignItems: 'center', gap: 18, paddingTop: 32 }}>
-            <Text style={{ fontSize: 72 }}>👋</Text>
+            <Illustration name="welcome" width={232} surface={t.colors.bg} />
             <Text style={{ color: t.colors.ink, fontSize: 28, fontWeight: '700', letterSpacing: -0.7, textAlign: 'center' }}>
               Welcome to{'\n'}iTrackHabit
             </Text>
@@ -196,7 +197,12 @@ const OnboardingScreen: React.FC = () => {
                         gap: 8,
                       }}
                     >
-                      <Text style={{ fontSize: 32 }}>{g.emoji}</Text>
+                      <Glyph
+                        name={g.icon}
+                        size={34}
+                        color={sel ? t.colors.primary : t.colors.ink2}
+                        surface={sel ? t.colors.bgElev : t.colors.bgPaper}
+                      />
                       <Text style={{ color: t.colors.ink, fontSize: 13, fontWeight: '600', textAlign: 'center' }}>
                         {g.title}
                       </Text>
@@ -254,7 +260,12 @@ const OnboardingScreen: React.FC = () => {
                             justifyContent: 'center',
                           }}
                         >
-                          <Text style={{ fontSize: 20 }}>{tmpl.emoji ?? '🎯'}</Text>
+                          <Glyph
+                            name={resolveGlyph(tmpl.emoji, tmpl.title)}
+                            size={22}
+                            color="#FFFFFF"
+                            surface={c}
+                          />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>{tmpl.title}</Text>
@@ -289,7 +300,7 @@ const OnboardingScreen: React.FC = () => {
 
         {step === 'ready' && (
           <View style={{ alignItems: 'center', gap: 18, paddingTop: 32 }}>
-            <Text style={{ fontSize: 72 }}>🚀</Text>
+            <Illustration name="ready" width={232} surface={t.colors.bg} />
             <Text style={{ color: t.colors.ink, fontSize: 28, fontWeight: '700', letterSpacing: -0.7, textAlign: 'center' }}>
               You're all set!
             </Text>

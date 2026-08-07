@@ -30,11 +30,32 @@ interface SyncResult {
 
 class DataService {
   private isInitialized = false;
+  private initPromise: Promise<void> | null = null;
+  private defaultHabitsPromise: Promise<void> | null = null;
   private syncInProgress = false;
   private currentUserId: string = "offline_user";
   private syncInterval: any = null;
 
+  /**
+   * Idempotent, concurrency-safe initialization.
+   *
+   * `isInitialized` is only set at the very end of a long await chain, so
+   * without an in-flight guard every caller that arrives during startup runs
+   * the whole sequence again — including `ensureDefaultHabits()`, which then
+   * seeds a second copy of every default habit. Sharing one promise means
+   * concurrent callers await the same run instead of racing it.
+   */
   async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+    if (!this.initPromise) {
+      this.initPromise = this.performInitialize().finally(() => {
+        this.initPromise = null;
+      });
+    }
+    return this.initPromise;
+  }
+
+  private async performInitialize(): Promise<void> {
     if (this.isInitialized) return;
 
     console.log("🚀 Initializing DataService...");
@@ -136,11 +157,26 @@ class DataService {
     } else {
       // Create default habits if needed (only for offline users)
       console.log("📱 Offline user, ensuring default habits...");
+      await this.repairDuplicateDefaultHabits();
       await this.ensureDefaultHabits();
     }
   }
 
   private async ensureDefaultHabits(): Promise<void> {
+    // `handleUserChange` can fire from the auth listener while initialize() is
+    // still running, so this needs its own in-flight guard rather than relying
+    // on the caller being serialized.
+    if (!this.defaultHabitsPromise) {
+      this.defaultHabitsPromise = this.performEnsureDefaultHabits().finally(
+        () => {
+          this.defaultHabitsPromise = null;
+        }
+      );
+    }
+    return this.defaultHabitsPromise;
+  }
+
+  private async performEnsureDefaultHabits(): Promise<void> {
     try {
       console.log("🔍 Checking default habits for user:", this.currentUserId);
 
@@ -181,9 +217,23 @@ class DataService {
           },
         ];
 
+        // Claim the flag *before* seeding. If this is written only after the
+        // writes complete, anything that slips past the guards above during
+        // that window seeds a second copy.
+        await offlineStorage.setMetadata("default_habits_created", "true");
+
+        // Belt and braces: never seed a title that is already present.
+        const existingTitles = new Set(
+          existingHabits.map((h) => (h.title || "").toLowerCase().trim())
+        );
+
         const now = new Date().toISOString();
 
         for (const habitData of defaultHabits) {
+          if (existingTitles.has(habitData.title.toLowerCase().trim())) {
+            console.log("⏭️  Default habit already present:", habitData.title);
+            continue;
+          }
           const habit: Habit = {
             id: uuidv4(),
             ...habitData,
@@ -204,8 +254,6 @@ class DataService {
           console.log("✅ Created default habit:", habit.title);
         }
 
-        // Mark as created to prevent future duplicates
-        await offlineStorage.setMetadata("default_habits_created", "true");
         console.log("✅ All default habits created successfully");
       } else {
         console.log("📊 Habits already exist, skipping default creation");
@@ -293,6 +341,10 @@ class DataService {
       frequency: habitData.frequency || "daily",
       type: habitData.type || "manual",
       color: habitData.color || "#A8B5A0",
+      // Both of these were dropped here, so the icon the user picked and any
+      // micro-steps they defined never reached storage.
+      emoji: habitData.emoji,
+      microSteps: habitData.microSteps,
       isShared: habitData.isShared || false,
       pending: true, // Mark as pending for sync
       userId: currentUser?.id || this.currentUserId,
@@ -358,6 +410,55 @@ class DataService {
     const habits = await offlineStorage.getHabits(this.currentUserId);
     console.log("📊 Found habits from offline storage:", habits.length);
     return habits;
+  }
+
+  /**
+   * One-time repair for devices that already contain duplicate *seeded*
+   * habits from the old initialization race.
+   *
+   * Deliberately narrow: it only collapses habits whose title matches a
+   * default AND that still carry the seed color, i.e. ones this app created
+   * itself. A user who genuinely made two habits with the same name keeps
+   * both — an automatic cleanup must never delete hand-entered data or its
+   * progress history. Keeps the oldest of each group.
+   */
+  private async repairDuplicateDefaultHabits(): Promise<void> {
+    try {
+      const REPAIR_KEY = "default_habits_deduped";
+      if ((await offlineStorage.getMetadata(REPAIR_KEY)) === "true") return;
+
+      const habits = await offlineStorage.getHabits(this.currentUserId);
+      const seedTitles = new Set(["exercise 30 min", "meditate 30 min"]);
+      const groups = new Map<string, Habit[]>();
+
+      for (const habit of habits) {
+        const key = (habit.title || "").toLowerCase().trim();
+        if (!seedTitles.has(key) || habit.color !== "#A8B5A0") continue;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(habit);
+      }
+
+      let removed = 0;
+      for (const [title, group] of groups) {
+        if (group.length < 2) continue;
+        const sorted = [...group].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        for (const dupe of sorted.slice(1)) {
+          await offlineStorage.deleteHabit(dupe.id);
+          removed++;
+        }
+        console.log(`🧹 Collapsed ${group.length} copies of "${title}"`);
+      }
+
+      await offlineStorage.setMetadata(REPAIR_KEY, "true");
+      if (removed > 0) {
+        console.log(`✅ Removed ${removed} duplicate seeded habits`);
+      }
+    } catch (error) {
+      console.warn("⚠️ Duplicate-habit repair failed:", error);
+    }
   }
 
   // Get all habits including deleted ones (for historical data display)
@@ -731,6 +832,8 @@ class DataService {
       notes?: string;
       timeSpentSeconds?: number;
       isChallenge?: boolean;
+      /** Ids of micro-steps ticked off on this date. */
+      microStepsDone?: string[];
     }
   ): Promise<HabitProgress> {
     if (!this.isInitialized) {
@@ -744,6 +847,7 @@ class DataService {
       targetValue,
       unit,
       timeSpentSeconds,
+      microStepsDone,
     } = options || {};
 
     // Check if progress already exists for this date
@@ -755,13 +859,18 @@ class DataService {
 
     if (existing) {
       // Update existing progress
+      // Only overwrite what the caller actually supplied. Spreading `existing`
+      // and then assigning possibly-undefined values wiped fields the caller
+      // never mentioned — the habit-list toggle passes no options at all, so
+      // ticking a habit erased its notes and logged value.
       progress = {
         ...existing,
         status: status === "skipped" ? "skip" : status,
-        notes,
-        currentValue,
-        targetValue,
-        unit,
+        notes: notes ?? existing.notes,
+        currentValue: currentValue ?? existing.currentValue,
+        targetValue: targetValue ?? existing.targetValue,
+        unit: unit ?? existing.unit,
+        microStepsDone: microStepsDone ?? existing.microStepsDone,
         updatedAt: now,
         pending: true,
       };
@@ -778,6 +887,7 @@ class DataService {
         currentValue,
         targetValue,
         unit,
+        microStepsDone,
         updatedAt: now,
         pending: true,
       };

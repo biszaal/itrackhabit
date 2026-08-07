@@ -5,23 +5,9 @@ import { RootStackScreenProps } from '../../types/navigation';
 import { HABIT_CATEGORIES, getTemplatesByCategory, HabitTemplate } from '../../data/habitTemplates';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Button } from '../../components/ds';
+import { Glyph, HabitIcon, Illustration, resolveGlyph } from '../../components/art';
 
 type HabitTemplatesScreenProps = RootStackScreenProps<'HabitTemplates'>;
-
-const tint = (hex: string, ratio: number, bg: string): string => {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  const bh = bg.replace('#', '');
-  const br = parseInt(bh.slice(0, 2), 16);
-  const bg2 = parseInt(bh.slice(2, 4), 16);
-  const bb = parseInt(bh.slice(4, 6), 16);
-  const mr = Math.round(r * ratio + br * (1 - ratio));
-  const mg = Math.round(g * ratio + bg2 * (1 - ratio));
-  const mb = Math.round(b * ratio + bb * (1 - ratio));
-  return `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
-};
 
 export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navigation }) => {
   const t = useTheme();
@@ -43,7 +29,7 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
     });
   };
 
-  const categories = [{ id: 'all', name: 'All', emoji: '✨' }, ...HABIT_CATEGORIES];
+  const categories = [{ id: 'all', name: 'All', icon: 'sparkle' }, ...HABIT_CATEGORIES];
 
   return (
     <Screen>
@@ -101,7 +87,12 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
                   backgroundColor: active ? t.colors.ink : t.colors.bgPaper,
                 }}
               >
-                <Text style={{ fontSize: 14 }}>{c.emoji ?? '✨'}</Text>
+                <Glyph
+                  name={resolveGlyph(c.icon, c.name)}
+                  size={16}
+                  color={active ? t.colors.bg : t.colors.ink2}
+                  surface={active ? t.colors.ink : t.colors.bgPaper}
+                />
                 <Text style={{ color: active ? t.colors.bg : t.colors.ink2, fontSize: 13, fontWeight: '600' }}>
                   {c.name}
                 </Text>
@@ -113,8 +104,10 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
         <View style={{ paddingHorizontal: t.spacing.screen, paddingTop: 16, gap: 10 }}>
           {templates.length === 0 ? (
             <Card variant="flat" padding={32} style={{ alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 40 }}>📋</Text>
-              <Text style={{ color: t.colors.ink, fontSize: 18, fontWeight: '700' }}>No templates here</Text>
+              <Illustration name="noTemplates" width={168} surface={t.colors.bgPaper} />
+              <Text style={{ color: t.colors.ink, fontSize: 18, fontWeight: '700', marginTop: 4 }}>
+                No templates here
+              </Text>
               <Text style={{ color: t.colors.ink2, fontSize: 13, textAlign: 'center' }}>
                 Try another category or create a custom habit.
               </Text>
@@ -130,18 +123,7 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
               >
                 <Card variant="elevated" padding={14}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 14,
-                        backgroundColor: tint(tmpl.color, 0.18, t.colors.bgPaper),
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Text style={{ fontSize: 24 }}>{tmpl.emoji}</Text>
-                    </View>
+                    <HabitIcon icon={tmpl.emoji} name={tmpl.title} color={tmpl.color} size={48} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: t.colors.ink, fontSize: 15, fontWeight: '600' }} numberOfLines={1}>
                         {tmpl.title}

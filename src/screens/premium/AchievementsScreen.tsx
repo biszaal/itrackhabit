@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { achievementService, UserAchievement, AchievementProgress } from '../../services/premium';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Ring, useTabBarHeight } from '../../components/ds';
+import { Glyph, Illustration, resolveGlyph } from '../../components/art';
 
 const tint = (hex: string, ratio: number, bg: string): string => {
   const h = hex.replace('#', '');
@@ -21,6 +22,20 @@ const tint = (hex: string, ratio: number, bg: string): string => {
 };
 
 type Filter = 'all' | 'earned' | 'progress';
+
+/** Ten rungs across the badge set, in the app's own encouraging register. */
+const RANKS = [
+  'Beginner',
+  'Apprentice',
+  'Practitioner',
+  'Regular',
+  'Committed',
+  'Disciplined',
+  'Devoted',
+  'Master',
+  'Exemplar',
+  'Legend',
+] as const;
 
 const SegTab: React.FC<{ active: boolean; label: string; onPress: () => void }> = ({ active, label, onPress }) => {
   const t = useTheme();
@@ -63,7 +78,7 @@ const AchievementsScreen: React.FC = () => {
       if (newOnes?.length) {
         const a = newOnes[0]?.achievement;
         if (a) {
-          Alert.alert('🎉 Achievement unlocked', `${a.title}\n${a.description}`, [
+          Alert.alert('Achievement unlocked', `${a.title}\n${a.description}`, [
             { text: 'Awesome!', onPress: () => achievementService.markAchievementsSeen() },
           ]);
         }
@@ -101,6 +116,16 @@ const AchievementsScreen: React.FC = () => {
   const totalCount = progress.length || earnedCount;
   const ratio = totalCount > 0 ? earnedCount / totalCount : 0;
 
+  // Ten levels across the full badge set. `getAchievementStats()` has no
+  // `level` field, so this is the only source — the rank name used to be the
+  // constant "Apprentice", which read as a lie once you passed level 1.
+  const level = Math.min(RANKS.length, Math.max(1, Math.floor(ratio * RANKS.length) + (ratio >= 1 ? 0 : 1)));
+  const rank = RANKS[level - 1];
+
+  // Badges needed to reach the next level, not the whole remaining set.
+  const nextLevelAt = Math.ceil((level / RANKS.length) * totalCount);
+  const toNextLevel = Math.max(0, nextLevelAt - earnedCount);
+
   return (
     <Screen>
       <AppHeader
@@ -123,10 +148,14 @@ const AchievementsScreen: React.FC = () => {
           </Ring>
           <View style={{ flex: 1 }}>
             <Text style={{ color: t.colors.ink, fontSize: 17, fontWeight: '600', letterSpacing: -0.2 }}>
-              Level {stats?.level ?? Math.max(1, Math.floor(ratio * 10))} · Apprentice
+              Level {level} · {rank}
             </Text>
             <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2 }}>
-              {Math.max(0, totalCount - earnedCount)} badges to your next level.
+              {totalCount === 0
+                ? 'Badges appear as you build streaks.'
+                : toNextLevel === 0
+                ? "Top rank — every badge earned."
+                : `${toNextLevel} ${toNextLevel === 1 ? 'badge' : 'badges'} to level ${level + 1}.`}
             </Text>
           </View>
         </Card>
@@ -153,8 +182,10 @@ const AchievementsScreen: React.FC = () => {
           </View>
         ) : filtered.length === 0 ? (
           <Card variant="flat" padding={28} style={{ marginTop: 16, alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 40 }}>🏆</Text>
-            <Text style={{ color: t.colors.ink, fontSize: 18, fontWeight: '700' }}>Nothing here yet</Text>
+            <Illustration name="awards" width={176} surface={t.colors.bgPaper} />
+            <Text style={{ color: t.colors.ink, fontSize: 18, fontWeight: '700', marginTop: 4 }}>
+              Nothing here yet
+            </Text>
             <Text style={{ color: t.colors.ink2, fontSize: 13, textAlign: 'center', maxWidth: 280 }}>
               Keep showing up and badges will appear.
             </Text>
@@ -181,7 +212,7 @@ const AchievementsScreen: React.FC = () => {
                     {progress
                       .filter((a) => a.isEarned)
                       .map((a) => {
-                        const c = (a as any).color ?? t.colors.primary;
+                        const c = a.achievement?.color || t.colors.primary;
                         return (
                           <View key={a.achievementId} style={{ width: '48%' }}>
                             <Card variant="elevated" padding={14} style={{ alignItems: 'center' }}>
@@ -204,13 +235,18 @@ const AchievementsScreen: React.FC = () => {
                                   },
                                 ]}
                               >
-                                <Text style={{ fontSize: 28 }}>{(a as any).emoji ?? '🏆'}</Text>
+                                <Glyph
+                                  name={resolveGlyph(a.achievement?.icon, a.achievement?.title)}
+                                  size={28}
+                                  color="#FFFFFF"
+                                  surface={c}
+                                />
                               </View>
                               <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600', marginTop: 10, textAlign: 'center' }} numberOfLines={1}>
-                                {(a as any).title}
+                                {a.achievement?.title ?? 'Achievement'}
                               </Text>
                               <Text style={{ color: t.colors.ink3, fontSize: 12, marginTop: 2, textAlign: 'center' }} numberOfLines={2}>
-                                {(a as any).description}
+                                {a.achievement?.description ?? ''}
                               </Text>
                             </Card>
                           </View>
@@ -239,9 +275,11 @@ const AchievementsScreen: React.FC = () => {
                   {progress
                     .filter((a) => !a.isEarned)
                     .map((a) => {
-                      const c = (a as any).color ?? t.colors.primary;
-                      const cur = (a as any).currentValue ?? 0;
-                      const tot = (a as any).targetValue ?? 1;
+                      // Title/description/icon/color live on the nested
+                      // `achievement`, not on the progress record itself.
+                      const c = a.achievement?.color || t.colors.primary;
+                      const cur = a.currentValue ?? 0;
+                      const tot = a.targetValue || 1;
                       const pct = Math.min(1, tot ? cur / tot : 0);
                       return (
                         <Card
@@ -260,19 +298,24 @@ const AchievementsScreen: React.FC = () => {
                               justifyContent: 'center',
                             }}
                           >
-                            <Text style={{ fontSize: 22 }}>{(a as any).emoji ?? '🎯'}</Text>
+                            <Glyph
+                              name={resolveGlyph(a.achievement?.icon, a.achievement?.title)}
+                              size={24}
+                              color={c}
+                              surface={tint(c, 0.14, t.colors.bgPaper)}
+                            />
                           </View>
                           <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                              <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }} numberOfLines={1}>
-                                {(a as any).title}
+                              <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600', flex: 1 }} numberOfLines={1}>
+                                {a.achievement?.title ?? 'Achievement'}
                               </Text>
                               <Text style={{ color: t.colors.ink3, fontSize: 12 }}>
                                 {cur}/{tot}
                               </Text>
                             </View>
-                            <Text style={{ color: t.colors.ink3, fontSize: 13, marginTop: 2 }} numberOfLines={1}>
-                              {(a as any).description}
+                            <Text style={{ color: t.colors.ink3, fontSize: 13, marginTop: 2 }} numberOfLines={2}>
+                              {a.achievement?.description ?? ''}
                             </Text>
                             <View
                               style={{

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackScreenProps } from '../../types/navigation';
@@ -10,6 +10,7 @@ import { dataService } from '../../services/core';
 import { timerService } from '../../services/habits/TimerService';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen } from '../../components/ds';
+import { Glyph, resolveGlyph } from '../../components/art';
 import { toLocalISODate } from '../../utils/formatting/time';
 
 type HabitTimerScreenProps = RootStackScreenProps<'HabitTimer'>;
@@ -21,15 +22,6 @@ const fmt = (s: number): string => {
   const mins = Math.floor(s / 60);
   const secs = s % 60;
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-};
-
-const emojiFor = (title: string): string => {
-  const t = (title || '').toLowerCase();
-  if (t.includes('meditat')) return '🧘';
-  if (t.includes('run')) return '🏃';
-  if (t.includes('read')) return '📚';
-  if (t.includes('write') || t.includes('journal')) return '✍️';
-  return '🎯';
 };
 
 export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, route }) => {
@@ -121,19 +113,23 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
 
   return (
     <Screen background={ambientBg}>
-      {/* Ambient gradient (faked with translucent radial-ish overlay) */}
-      <View
-        style={{
-          position: 'absolute',
-          top: '10%',
-          left: '10%',
-          right: '10%',
-          height: 320,
-          borderRadius: 200,
-          backgroundColor: accent,
-          opacity: 0.15,
-        }}
-      />
+      {/* Ambient glow behind the timer.
+          This was previously a solid `backgroundColor` block with a large
+          borderRadius, which renders as a hard-edged disc rather than a glow —
+          it read as a second circle colliding with the progress ring. A real
+          radial gradient fades to fully transparent, so there is no edge. */}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none">
+        <Svg width="100%" height="100%">
+          <Defs>
+            <RadialGradient id="ambientGlow" cx="50%" cy="42%" rx="70%" ry="42%">
+              <Stop offset="0" stopColor={accent} stopOpacity={t.isDark ? 0.28 : 0.18} />
+              <Stop offset="0.6" stopColor={accent} stopOpacity={t.isDark ? 0.1 : 0.06} />
+              <Stop offset="1" stopColor={accent} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#ambientGlow)" />
+        </Svg>
+      </View>
 
       <View style={{ flex: 1, paddingTop: insets.top + 12, paddingHorizontal: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -174,7 +170,14 @@ export const HabitTimerScreen: React.FC<HabitTimerScreenProps> = ({ navigation, 
 
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24 }}>
           <View style={{ alignItems: 'center' }}>
-            <Text style={{ fontSize: 36, marginBottom: 4 }}>{habit?.emoji || emojiFor(habit?.title ?? '')}</Text>
+            <View style={{ marginBottom: 8 }}>
+              <Glyph
+                name={resolveGlyph(habit?.emoji, habit?.title)}
+                size={40}
+                color={accent}
+                surface={t.colors.bg}
+              />
+            </View>
             <Text style={{ color: t.isDark ? '#FFFFFF' : t.colors.ink, fontSize: 20, fontWeight: '600' }}>
               {habit?.title || 'Focus session'}
             </Text>

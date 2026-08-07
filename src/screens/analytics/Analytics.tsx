@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, useTabBarHeight } from '../../components/ds';
+import { Glyph, GlyphName, HabitIcon } from '../../components/art';
 
 const tint = (hex: string, ratio: number, bg: string): string => {
   const h = hex.replace('#', '');
@@ -244,18 +245,7 @@ const Analytics: React.FC = () => {
               const pct = (h.completionRate ?? 0) / 100;
               return (
                 <Card key={h.id} variant="elevated" padding={14} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 12,
-                      backgroundColor: tint(c, 0.14, t.colors.bgPaper),
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 18 }}>{h.emoji || '🎯'}</Text>
-                  </View>
+                  <HabitIcon icon={h.emoji} name={h.title} color={c} size={38} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }} numberOfLines={1}>
                       {h.title}
@@ -307,15 +297,15 @@ const Analytics: React.FC = () => {
           </View>
         </View>
         <View style={{ gap: 10 }}>
-          {[
-            ['🌅', 'Mornings work for you', 'Habits done before 10am have a 92% completion rate vs. 64% in the afternoon.', t.colors.primary],
-            ['🔗', 'Try habit stacking', 'On days you run, you meditate 38% more reliably. Stack them.', t.colors.sage],
-            ['⚠️', 'Watch Tuesdays', "It's your weakest day this month — try one easy keystone habit.", t.colors.amber],
-          ].map(([e, h, b, c], i) => (
+          {([
+            ['sunrise', 'Mornings work for you', 'Habits done before 10am have a 92% completion rate vs. 64% in the afternoon.', t.colors.primary],
+            ['link', 'Try habit stacking', 'On days you run, you meditate 38% more reliably. Stack them.', t.colors.sage],
+            ['warning', 'Watch Tuesdays', "It's your weakest day this month — try one easy keystone habit.", t.colors.amber],
+          ] as [GlyphName, string, string, string][]).map(([g, h, b, c], i) => (
             <Card key={i} variant="elevated" padding={16} style={{ position: 'relative', overflow: 'hidden' }}>
-              <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, backgroundColor: c as string }} />
+              <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, backgroundColor: c }} />
               <View style={{ flexDirection: 'row', gap: 12, paddingLeft: 6 }}>
-                <Text style={{ fontSize: 24 }}>{e}</Text>
+                <Glyph name={g} size={26} color={c} surface={t.colors.bgElev} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>{h}</Text>
                   <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2, lineHeight: 18 }}>{b}</Text>

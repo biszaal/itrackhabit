@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, Pressable, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { HabitIcon } from '../art';
 
 interface Props {
-  emoji?: string;
+  /** Glyph name, or a legacy emoji from an older record. */
+  icon?: string | null;
   name: string;
   target?: string;
   color?: string;
@@ -17,24 +19,8 @@ interface Props {
   style?: ViewStyle;
 }
 
-// Mix a color with another (background) by ratio 0..1
-const tint = (hex: string, ratio: number, bg = '#FFFFFF'): string => {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  const bh = bg.replace('#', '');
-  const br = parseInt(bh.slice(0, 2), 16);
-  const bg2 = parseInt(bh.slice(2, 4), 16);
-  const bb = parseInt(bh.slice(4, 6), 16);
-  const mr = Math.round(r * ratio + br * (1 - ratio));
-  const mg = Math.round(g * ratio + bg2 * (1 - ratio));
-  const mb = Math.round(b * ratio + bb * (1 - ratio));
-  return `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
-};
-
 export const HabitRow: React.FC<Props> = ({
-  emoji = '🎯',
+  icon,
   name,
   target,
   color,
@@ -50,8 +36,6 @@ export const HabitRow: React.FC<Props> = ({
   const accent = color ?? t.colors.primary;
   const pct = Math.min(1, total > 0 ? done / total : 0);
   const isDone = pct >= 1;
-
-  const iconBg = tint(accent, 0.14, t.colors.bgPaper);
 
   // Screen readers get the habit, its target and where it stands — the visual
   // row conveys all three at a glance, so the label should too.
@@ -101,19 +85,7 @@ export const HabitRow: React.FC<Props> = ({
         />
 
         {/* icon */}
-        <View
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 14,
-            backgroundColor: iconBg,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <Text style={{ fontSize: 22, lineHeight: 26 }}>{emoji}</Text>
-        </View>
+        <HabitIcon icon={icon} name={name} color={accent} size={44} />
 
         {/* meta */}
         <View style={{ flex: 1, minWidth: 0 }}>

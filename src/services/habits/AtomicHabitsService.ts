@@ -210,20 +210,20 @@ class AtomicHabitsService {
     const { improvementRate, projectedValue, currentValue } = progress;
 
     if (improvementRate >= 1) {
-      return `🚀 Amazing! Your ${improvementRate.toFixed(
+      return `Amazing! Your ${improvementRate.toFixed(
         1
       )}% daily improvement means you'll reach ${projectedValue.toFixed(
         0
       )} in 30 days. Small gains, massive results!`;
     } else if (improvementRate >= 0.5) {
-      return `📈 You're on track! Even ${improvementRate.toFixed(
+      return `You're on track! Even ${improvementRate.toFixed(
         1
       )}% daily improvement compounds to ${(
         (projectedValue / currentValue - 1) *
         100
       ).toFixed(0)}% growth in a month.`;
     } else {
-      return `💪 Focus on just 1% better each day. That tiny improvement becomes 37x better in a year through compound growth!`;
+      return `Focus on just 1% better each day. That tiny improvement becomes 37x better in a year through compound growth!`;
     }
   }
 
@@ -392,12 +392,12 @@ class AtomicHabitsService {
 
   private getImmediateReward(streak: number): string {
     if (streak >= 30)
-      return "🏆 Incredible! 30+ day streak - you are unstoppable!";
-    if (streak >= 14) return "🔥 Two weeks strong! This is becoming automatic!";
+      return "Incredible! 30+ day streak - you are unstoppable!";
+    if (streak >= 14) return "Two weeks strong! This is becoming automatic!";
     if (streak >= 7)
-      return "⭐ One week complete! You're building real momentum!";
-    if (streak >= 3) return "💪 Three days in a row - momentum is building!";
-    return "🎉 Great job! Each completion is a vote for your best self!";
+      return "One week complete! You're building real momentum!";
+    if (streak >= 3) return "Three days in a row - momentum is building!";
+    return "Great job! Each completion is a vote for your best self!";
   }
 
   // =====================================
@@ -566,22 +566,22 @@ class AtomicHabitsService {
   ): string[] {
     const suggestions = {
       high: [
-        "🚨 Use the 2-minute rule - make it so easy you can't say no",
-        "🔄 Change your environment - remove friction and barriers",
-        "👥 Get an accountability partner to check in daily",
-        "⚡ Focus on just showing up - success is getting started",
+        "Use the 2-minute rule - make it so easy you can't say no",
+        "Change your environment - remove friction and barriers",
+        "Get an accountability partner to check in daily",
+        "Focus on just showing up - success is getting started",
       ],
       medium: [
-        "🎯 Never miss twice - if you missed today, absolutely do it tomorrow",
-        "🏗️ Review your system - what made it hard to complete?",
-        "🎁 Add an immediate reward to make completion more satisfying",
-        "📱 Set up stronger cues and reminders",
+        "Never miss twice - if you missed today, absolutely do it tomorrow",
+        "Review your system - what made it hard to complete?",
+        "Add an immediate reward to make completion more satisfying",
+        "Set up stronger cues and reminders",
       ],
       low: [
-        "💪 You're doing great! Small misses are normal",
-        "🔍 Reflect on your identity - reinforce who you're becoming",
-        "📊 Track your progress to see the compound growth",
-        "🎉 Celebrate your consistency - you're building a lasting habit",
+        "You're doing great! Small misses are normal",
+        "Reflect on your identity - reinforce who you're becoming",
+        "Track your progress to see the compound growth",
+        "Celebrate your consistency - you're building a lasting habit",
       ],
     };
 
@@ -620,14 +620,14 @@ class AtomicHabitsService {
     analysis: BehaviorAnalysis
   ): string[] {
     const strategies = [
-      `🎯 Increase difficulty: Add 10% more to your ${habit.title}`,
-      `🔄 Change the method: Try a different approach to ${habit.title}`,
+      `Increase difficulty: Add 10% more to your ${habit.title}`,
+      `Change the method: Try a different approach to ${habit.title}`,
       `⏰ Switch timing: Move ${habit.title} to a different time of day`,
-      `🌍 Change location: Do ${habit.title} in a new environment`,
-      `👥 Add social element: Do ${habit.title} with others or share progress`,
-      `📈 Track differently: Measure a new aspect of ${habit.title}`,
-      `🎁 Change reward: Create a new celebration for completing ${habit.title}`,
-      `🧠 Add mindfulness: Focus on the process, not just the outcome`,
+      `Change location: Do ${habit.title} in a new environment`,
+      `Add social element: Do ${habit.title} with others or share progress`,
+      `Track differently: Measure a new aspect of ${habit.title}`,
+      `Change reward: Create a new celebration for completing ${habit.title}`,
+      `Add mindfulness: Focus on the process, not just the outcome`,
     ];
 
     return strategies.slice(0, 4); // Return top 4 strategies

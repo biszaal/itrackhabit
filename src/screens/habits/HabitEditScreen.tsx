@@ -5,6 +5,7 @@ import { RootStackScreenProps } from '../../types/navigation';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Button, Field } from '../../components/ds';
+import { Glyph, GlyphName, resolveGlyph } from '../../components/art';
 
 type HabitEditScreenProps = RootStackScreenProps<'HabitEdit'>;
 
@@ -14,13 +15,35 @@ const FREQS: { label: string; value: FrequencyType }[] = [
   { label: 'Custom', value: 'custom' },
 ];
 
-const EMOJI_OPTIONS = ['🧘', '🏃', '📚', '💧', '✍️', '🌙', '🥗', '🎯', '💪', '🚶', '🛏️', '🎵'];
+const ICON_OPTIONS: GlyphName[] = [
+  'target',
+  'run',
+  'walk',
+  'strength',
+  'stretch',
+  'meditate',
+  'water',
+  'nutrition',
+  'sleep',
+  'read',
+  'study',
+  'write',
+  'journal',
+  'music',
+  'draw',
+  'code',
+  'work',
+  'plan',
+];
 
 export const HabitEditScreen: React.FC<HabitEditScreenProps> = ({ navigation, route }) => {
   const t = useTheme();
   const { habit: initial } = route.params;
   const [habit, setHabit] = useState<Habit>(initial);
   const [saving, setSaving] = useState(false);
+  // Habits saved before the icon set landed still hold an emoji — resolve it so
+  // the matching glyph reads as selected rather than nothing at all.
+  const current = resolveGlyph(habit.emoji, habit.title);
 
   const handleSave = async () => {
     setSaving(true);
@@ -86,29 +109,35 @@ export const HabitEditScreen: React.FC<HabitEditScreenProps> = ({ navigation, ro
             multiline
           />
 
-          <Text style={lblStyle(t)}>Emoji</Text>
+          <Text style={lblStyle(t)}>Icon</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {EMOJI_OPTIONS.map((e) => {
-              const sel = e === habit.emoji;
+            {ICON_OPTIONS.map((g) => {
+              const sel = g === current;
+              const surface = sel ? t.colors.bgElev : t.colors.bgPaper;
               return (
                 <Pressable
-                  key={e}
-                  onPress={() => setHabit({ ...habit, emoji: e })}
+                  key={g}
+                  onPress={() => setHabit({ ...habit, emoji: g })}
                   accessibilityRole="button"
-                  accessibilityLabel={`Emoji ${e}`}
-                  accessibilityState={{ selected: habit.emoji === e }}
+                  accessibilityLabel={`${g} icon`}
+                  accessibilityState={{ selected: sel }}
                   style={{
                     width: 52,
                     height: 52,
                     borderRadius: 14,
-                    backgroundColor: sel ? t.colors.bgElev : t.colors.bgPaper,
+                    backgroundColor: surface,
                     borderWidth: sel ? 1.5 : 0,
                     borderColor: habit.color ?? t.colors.primary,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>{e}</Text>
+                  <Glyph
+                    name={g}
+                    size={24}
+                    color={sel ? habit.color ?? t.colors.primary : t.colors.ink2}
+                    surface={surface}
+                  />
                 </Pressable>
               );
             })}

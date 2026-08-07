@@ -158,25 +158,25 @@ class AIInsightsService {
         type: "health",
         title: "Morning Exercise",
         description: "Start your day with 20 minutes of physical activity",
-        emoji: "💪",
+        emoji: "strength",
       },
       {
         type: "mindfulness",
         title: "Daily Meditation",
         description: "Practice 10 minutes of mindfulness meditation",
-        emoji: "🧘",
+        emoji: "meditate",
       },
       {
         type: "learning",
         title: "Read for Growth",
         description: "Read 15 pages of a personal development book daily",
-        emoji: "📚",
+        emoji: "study",
       },
       {
         type: "productivity",
         title: "Plan Tomorrow",
         description: "Spend 5 minutes planning the next day before bed",
-        emoji: "📝",
+        emoji: "journal",
       },
     ];
 
@@ -227,7 +227,7 @@ class AIInsightsService {
         relatedHabits: [habit.id],
         estimatedImpact: `Could increase success rate by 25-40%`,
         category: habit.type || "general",
-        emoji: "📈",
+        emoji: "analytics",
         createdAt: new Date().toISOString(),
       });
     });
@@ -258,7 +258,7 @@ class AIInsightsService {
         estimatedImpact:
           "Medium - Habit stacking can improve consistency by 30%",
         category: "productivity",
-        emoji: "🔗",
+        emoji: "link",
         createdAt: new Date().toISOString(),
       });
     }
@@ -607,7 +607,7 @@ class AIInsightsService {
         id: `coaching_celebration_${habit.id}`,
         type: "celebration",
         title: "Amazing Streak!",
-        message: `🎉 You've maintained "${habit.title}" for ${habit.currentStreak} days straight! This is the power of consistency in action.`,
+        message: `You've maintained "${habit.title}" for ${habit.currentStreak} days straight! This is the power of consistency in action.`,
         habitId: habit.id,
         triggerCondition: "streak_milestone",
         isActive: true,
@@ -637,10 +637,10 @@ class AIInsightsService {
 
   private getMotivationalMessage(habit: HabitWithStats): string {
     const messages = [
-      `Remember why you started "${habit.title}" - that motivation is still valid! 💪`,
-      `Every small step with "${habit.title}" is progress. You're building something amazing! 🌟`,
-      `"${habit.title}" might be challenging now, but consistency beats perfection every time! 🎯`,
-      `Your future self will thank you for not giving up on "${habit.title}" today! 🚀`,
+      `Remember why you started "${habit.title}" - that motivation is still valid!`,
+      `Every small step with "${habit.title}" is progress. You're building something amazing!`,
+      `"${habit.title}" might be challenging now, but consistency beats perfection every time!`,
+      `Your future self will thank you for not giving up on "${habit.title}" today!`,
       `Progress, not perfection! Keep working on "${habit.title}" - you've got this! ⭐`,
     ];
     return messages[Math.floor(Math.random() * messages.length)];

@@ -26,12 +26,12 @@ class HabitTemplatesService {
     {
       id: 'fitness',
       name: 'Fitness',
-      icon: '💪',
+      icon: 'strength',
       color: '#FF6B6B',
       templates: [
         {
           id: 'walk',
-          icon: '🚶',
+          icon: 'walk',
           title: 'Daily Walk',
           description: 'Take a 30-minute walk for better health',
           category: 'fitness',
@@ -43,7 +43,7 @@ class HabitTemplatesService {
         },
         {
           id: 'exercise',
-          icon: '🏃',
+          icon: 'run',
           title: 'Exercise',
           description: 'Get your heart pumping with cardio or strength training',
           category: 'fitness',
@@ -55,7 +55,7 @@ class HabitTemplatesService {
         },
         {
           id: 'yoga',
-          icon: '🧘',
+          icon: 'meditate',
           title: 'Yoga Practice',
           description: 'Improve flexibility and mindfulness',
           category: 'fitness',
@@ -67,7 +67,7 @@ class HabitTemplatesService {
         },
         {
           id: 'pushups',
-          icon: '💪',
+          icon: 'strength',
           title: 'Push-ups',
           description: 'Build upper body strength with push-ups',
           category: 'fitness',
@@ -82,12 +82,12 @@ class HabitTemplatesService {
     {
       id: 'wellness',
       name: 'Wellness',
-      icon: '🧠',
+      icon: 'brain',
       color: '#4ECDC4',
       templates: [
         {
           id: 'meditate',
-          icon: '🧘‍♀️',
+          icon: 'meditate',
           title: 'Meditation',
           description: 'Practice mindfulness and reduce stress',
           category: 'wellness',
@@ -99,7 +99,7 @@ class HabitTemplatesService {
         },
         {
           id: 'sleep',
-          icon: '😴',
+          icon: 'sleep',
           title: 'Quality Sleep',
           description: 'Get 7-8 hours of restful sleep',
           category: 'wellness',
@@ -111,7 +111,7 @@ class HabitTemplatesService {
         },
         {
           id: 'water',
-          icon: '💧',
+          icon: 'water',
           title: 'Hydration',
           description: 'Drink 8 glasses of water daily',
           category: 'wellness',
@@ -123,7 +123,7 @@ class HabitTemplatesService {
         },
         {
           id: 'vitamins',
-          icon: '💊',
+          icon: 'vitamins',
           title: 'Take Vitamins',
           description: 'Remember your daily supplements',
           category: 'wellness',
@@ -138,12 +138,12 @@ class HabitTemplatesService {
     {
       id: 'learning',
       name: 'Learning',
-      icon: '📚',
+      icon: 'study',
       color: '#45B7D1',
       templates: [
         {
           id: 'read',
-          icon: '📖',
+          icon: 'read',
           title: 'Reading',
           description: 'Read for 30 minutes to expand your knowledge',
           category: 'learning',
@@ -155,7 +155,7 @@ class HabitTemplatesService {
         },
         {
           id: 'language',
-          icon: '🗣️',
+          icon: 'language',
           title: 'Language Learning',
           description: 'Practice a new language for 20 minutes',
           category: 'learning',
@@ -167,7 +167,7 @@ class HabitTemplatesService {
         },
         {
           id: 'podcast',
-          icon: '🎧',
+          icon: 'music',
           title: 'Listen to Podcast',
           description: 'Learn something new through podcasts',
           category: 'learning',
@@ -179,7 +179,7 @@ class HabitTemplatesService {
         },
         {
           id: 'skill',
-          icon: '🎯',
+          icon: 'target',
           title: 'Practice Skill',
           description: 'Dedicate time to developing a specific skill',
           category: 'learning',
@@ -194,12 +194,12 @@ class HabitTemplatesService {
     {
       id: 'productivity',
       name: 'Productivity',
-      icon: '⚡',
+      icon: 'bolt',
       color: '#FFA726',
       templates: [
         {
           id: 'journal',
-          icon: '📝',
+          icon: 'journal',
           title: 'Daily Journal',
           description: 'Reflect on your day and thoughts',
           category: 'productivity',
@@ -211,7 +211,7 @@ class HabitTemplatesService {
         },
         {
           id: 'plan',
-          icon: '📅',
+          icon: 'plan',
           title: 'Plan Tomorrow',
           description: 'Prepare for the next day',
           category: 'productivity',
@@ -223,7 +223,7 @@ class HabitTemplatesService {
         },
         {
           id: 'declutter',
-          icon: '🧹',
+          icon: 'review',
           title: 'Declutter Space',
           description: 'Organize and clean your environment',
           category: 'productivity',
@@ -238,12 +238,12 @@ class HabitTemplatesService {
     {
       id: 'social',
       name: 'Social',
-      icon: '👥',
+      icon: 'people',
       color: '#AB47BC',
       templates: [
         {
           id: 'family',
-          icon: '👨‍👩‍👧‍👦',
+          icon: 'people',
           title: 'Connect with Family',
           description: 'Spend quality time with family members',
           category: 'social',
@@ -255,7 +255,7 @@ class HabitTemplatesService {
         },
         {
           id: 'friends',
-          icon: '👯',
+          icon: 'people',
           title: 'Reach Out to Friends',
           description: 'Call or message a friend',
           category: 'social',
@@ -267,7 +267,7 @@ class HabitTemplatesService {
         },
         {
           id: 'gratitude',
-          icon: '🙏',
+          icon: 'gratitude',
           title: 'Practice Gratitude',
           description: 'Write down 3 things you\'re grateful for',
           category: 'social',

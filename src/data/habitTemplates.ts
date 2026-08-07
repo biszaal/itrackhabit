@@ -3,6 +3,11 @@ export interface HabitTemplate {
   title: string;
   description: string;
   category: 'health' | 'productivity' | 'mindfulness' | 'learning' | 'social' | 'creative';
+  /**
+   * Name of a glyph from `components/art`. Stored on the habit's `emoji` column
+   * when a template is used — the column kept its name, but nothing writes an
+   * emoji to it any more; legacy values are translated on read by resolveGlyph.
+   */
   emoji: string;
   color: string;
   frequency: 'daily' | 'weekly';
@@ -29,7 +34,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Morning Workout',
     description: 'Start your day with 30 minutes of exercise',
     category: 'health',
-    emoji: '💪',
+    emoji: 'strength',
     color: '#FF6B6B',
     frequency: 'daily',
     targetConfig: {
@@ -52,7 +57,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Drink Water',
     description: 'Stay hydrated with 8 glasses of water daily',
     category: 'health',
-    emoji: '💧',
+    emoji: 'water',
     color: '#4ECDC4',
     frequency: 'daily',
     targetConfig: {
@@ -69,7 +74,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Walk 10,000 Steps',
     description: 'Daily step goal for active lifestyle',
     category: 'health',
-    emoji: '🚶',
+    emoji: 'walk',
     color: '#95E1D3',
     frequency: 'daily',
     targetConfig: {
@@ -93,7 +98,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Meditation',
     description: 'Daily mindfulness practice for inner peace',
     category: 'mindfulness',
-    emoji: '🧘',
+    emoji: 'meditate',
     color: '#A8B5A0',
     frequency: 'daily',
     targetConfig: {
@@ -110,7 +115,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Gratitude Journal',
     description: 'Write down 3 things you\'re grateful for',
     category: 'mindfulness',
-    emoji: '📝',
+    emoji: 'journal',
     color: '#F8B500',
     frequency: 'daily',
     targetConfig: {
@@ -127,7 +132,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Deep Breathing',
     description: 'Breathing exercises for stress relief',
     category: 'mindfulness',
-    emoji: '🌬️',
+    emoji: 'breathe',
     color: '#B4A5E8',
     frequency: 'daily',
     targetConfig: {
@@ -146,7 +151,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Reading',
     description: 'Daily reading for continuous learning',
     category: 'learning',
-    emoji: '📚',
+    emoji: 'study',
     color: '#6C5CE7',
     frequency: 'daily',
     targetConfig: {
@@ -163,7 +168,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Language Learning',
     description: 'Practice a new language daily',
     category: 'learning',
-    emoji: '🗣️',
+    emoji: 'language',
     color: '#FD79A8',
     frequency: 'daily',
     targetConfig: {
@@ -180,7 +185,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Skill Practice',
     description: 'Dedicated time for developing new skills',
     category: 'learning',
-    emoji: '🎯',
+    emoji: 'target',
     color: '#00B894',
     frequency: 'daily',
     targetConfig: {
@@ -199,7 +204,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Morning Routine',
     description: 'Complete morning routine checklist',
     category: 'productivity',
-    emoji: '🌅',
+    emoji: 'sunrise',
     color: '#FDCB6E',
     frequency: 'daily',
     targetConfig: {
@@ -216,7 +221,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Social Media Detox',
     description: 'Avoid social media for focused work time',
     category: 'productivity',
-    emoji: '📵',
+    emoji: 'offline',
     color: '#E17055',
     frequency: 'daily',
     targetConfig: {
@@ -233,7 +238,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Plan Tomorrow',
     description: 'Evening planning for next day\'s priorities',
     category: 'productivity',
-    emoji: '📅',
+    emoji: 'plan',
     color: '#0984E3',
     frequency: 'daily',
     targetConfig: {
@@ -252,7 +257,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Creative Writing',
     description: 'Daily writing practice for creativity',
     category: 'creative',
-    emoji: '✍️',
+    emoji: 'write',
     color: '#A29BFE',
     frequency: 'daily',
     targetConfig: {
@@ -269,7 +274,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Call Family',
     description: 'Stay connected with family members',
     category: 'social',
-    emoji: '📞',
+    emoji: 'call',
     color: '#FF7675',
     frequency: 'weekly',
     targetConfig: {
@@ -286,7 +291,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Practice Instrument',
     description: 'Daily music practice session',
     category: 'creative',
-    emoji: '🎸',
+    emoji: 'music',
     color: '#74B9FF',
     frequency: 'daily',
     targetConfig: {
@@ -305,7 +310,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Consistent Sleep',
     description: 'Maintain regular sleep schedule',
     category: 'health',
-    emoji: '😴',
+    emoji: 'sleep',
     color: '#6C5CE7',
     frequency: 'daily',
     targetConfig: {
@@ -330,7 +335,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Online Course',
     description: 'Complete daily lessons or modules',
     category: 'learning',
-    emoji: '🎓',
+    emoji: 'learn',
     color: '#9333EA',
     frequency: 'daily',
     targetConfig: {
@@ -347,7 +352,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Coding Practice',
     description: 'Practice programming skills daily',
     category: 'learning',
-    emoji: '💻',
+    emoji: 'code',
     color: '#059669',
     frequency: 'daily',
     targetConfig: {
@@ -366,7 +371,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Stretching',
     description: 'Daily stretching routine for flexibility',
     category: 'health',
-    emoji: '🤸',
+    emoji: 'stretch',
     color: '#DC2626',
     frequency: 'daily',
     targetConfig: {
@@ -383,7 +388,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Healthy Meal Prep',
     description: 'Prepare nutritious meals in advance',
     category: 'health',
-    emoji: '🥗',
+    emoji: 'nutrition',
     color: '#16A34A',
     frequency: 'weekly',
     targetConfig: {
@@ -402,7 +407,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Inbox Zero',
     description: 'Clear and organize your email inbox',
     category: 'productivity',
-    emoji: '📧',
+    emoji: 'inbox',
     color: '#EA580C',
     frequency: 'daily',
     targetConfig: {
@@ -419,7 +424,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Deep Work Session',
     description: 'Focused work without distractions',
     category: 'productivity',
-    emoji: '🎯',
+    emoji: 'target',
     color: '#7C3AED',
     frequency: 'daily',
     targetConfig: {
@@ -438,7 +443,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Photography Practice',
     description: 'Take and edit photos to improve skills',
     category: 'creative',
-    emoji: '📸',
+    emoji: 'photo',
     color: '#DB2777',
     frequency: 'daily',
     targetConfig: {
@@ -455,7 +460,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Drawing Practice',
     description: 'Sketch or draw to develop artistic skills',
     category: 'creative',
-    emoji: '✏️',
+    emoji: 'write',
     color: '#0EA5E9',
     frequency: 'daily',
     targetConfig: {
@@ -474,7 +479,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Check In With Friend',
     description: 'Reach out to maintain relationships',
     category: 'social',
-    emoji: '💬',
+    emoji: 'chat',
     color: '#F59E0B',
     frequency: 'weekly',
     targetConfig: {
@@ -491,7 +496,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Volunteer Work',
     description: 'Give back to your community',
     category: 'social',
-    emoji: '🤝',
+    emoji: 'people',
     color: '#10B981',
     frequency: 'weekly',
     targetConfig: {
@@ -510,7 +515,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Nature Walk',
     description: 'Mindful walking in natural settings',
     category: 'mindfulness',
-    emoji: '🌲',
+    emoji: 'nature',
     color: '#059669',
     frequency: 'daily',
     targetConfig: {
@@ -527,7 +532,7 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     title: 'Digital Detox Hour',
     description: 'One hour without screens or devices',
     category: 'mindfulness',
-    emoji: '📵',
+    emoji: 'offline',
     color: '#DC2626',
     frequency: 'daily',
     targetConfig: {
@@ -542,13 +547,13 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
 ];
 
 export const HABIT_CATEGORIES = [
-  { id: 'all', name: 'All Templates', emoji: '📋' },
-  { id: 'health', name: 'Health & Fitness', emoji: '💪' },
-  { id: 'mindfulness', name: 'Mindfulness', emoji: '🧘' },
-  { id: 'learning', name: 'Learning', emoji: '📚' },
-  { id: 'productivity', name: 'Productivity', emoji: '🎯' },
-  { id: 'creative', name: 'Creative', emoji: '🎨' },
-  { id: 'social', name: 'Social', emoji: '👥' },
+  { id: 'all', name: 'All Templates', icon: 'templates' },
+  { id: 'health', name: 'Health & Fitness', icon: 'strength' },
+  { id: 'mindfulness', name: 'Mindfulness', icon: 'meditate' },
+  { id: 'learning', name: 'Learning', icon: 'study' },
+  { id: 'productivity', name: 'Productivity', icon: 'target' },
+  { id: 'creative', name: 'Creative', icon: 'draw' },
+  { id: 'social', name: 'Social', icon: 'people' },
 ];
 
 export function getTemplatesByCategory(category: string): HabitTemplate[] {
