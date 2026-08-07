@@ -11,7 +11,8 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "simulator": true
+        "simulator": true,
+        "image": "macos-sequoia-15.6-xcode-26.0"
       },
       "env": {
         "GCC_TREAT_WARNINGS_AS_ERRORS": "NO",
@@ -21,7 +22,8 @@
     "production": {
       "ios": {
         "autoIncrement": true,
-        "credentialsSource": "remote"
+        "credentialsSource": "remote",
+        "image": "macos-sequoia-15.6-xcode-26.0"
       },
       "android": {
         "autoIncrement": "versionCode"
