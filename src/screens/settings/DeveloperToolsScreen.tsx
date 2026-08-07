@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { mockDataService } from '../../services/core';
+import { mockDataService, dataService } from '../../services/core';
 import { RootStackScreenProps } from '../../types/navigation';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Button } from '../../components/ds';
@@ -16,7 +16,8 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
 
   const load = useCallback(async () => {
     try {
-      const s = await mockDataService.getMockDataStats();
+      await dataService.initialize();
+      const s = await mockDataService.getMockDataStats(dataService.getCurrentUserId());
       setStats(s);
     } catch {}
   }, []);
@@ -30,16 +31,17 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
   };
 
   const handleCreate = () => {
-    Alert.alert('Create mock data', '3 test users with 1–2 years of realistic habit data. For testing only.', [
+    Alert.alert('Add demo data', 'Adds 6 habits with about four months of history to this device, for screenshots. Your existing habits are left alone.', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Create',
+        text: 'Add',
         onPress: async () => {
           setLoading(true);
           try {
-            await mockDataService.createMockData();
+            await dataService.initialize();
+            await mockDataService.createMockData(dataService.getCurrentUserId());
             await load();
-            Alert.alert('Done', 'Mock data created.');
+            Alert.alert('Done', 'Demo data added. Pull to refresh on the Habits tab.');
           } catch {
             Alert.alert('Failed', 'Could not create mock data.');
           } finally {
@@ -51,7 +53,7 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
   };
 
   const handleRemove = () => {
-    Alert.alert('Remove mock data', 'Permanently delete all test users.', [
+    Alert.alert('Remove demo data', 'Permanently deletes the six seeded habits and their history. Habits you created yourself are kept.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
@@ -59,9 +61,10 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
         onPress: async () => {
           setLoading(true);
           try {
-            await mockDataService.removeMockData();
+            await dataService.initialize();
+            await mockDataService.removeMockData(dataService.getCurrentUserId());
             await load();
-            Alert.alert('Done', 'Mock data removed.');
+            Alert.alert('Done', 'Demo data removed.');
           } catch {
             Alert.alert('Failed', 'Could not remove mock data.');
           } finally {
@@ -95,19 +98,19 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
               <Ionicons name="bug-outline" size={18} color={t.colors.ink2} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: t.colors.ink, fontSize: 15, fontWeight: '700' }}>Mock data</Text>
+              <Text style={{ color: t.colors.ink, fontSize: 15, fontWeight: '700' }}>Demo data</Text>
               <Text style={{ color: t.colors.ink3, fontSize: 12, marginTop: 2 }}>
-                {stats?.totalUsers
-                  ? `${stats.totalUsers} test users · ${stats.totalHabits ?? 0} habits`
-                  : 'No mock data present'}
+                {stats
+                  ? `${stats.habits} habit${stats.habits === 1 ? '' : 's'} · ${stats.progress} entries on this device`
+                  : 'Reading…'}
               </Text>
             </View>
           </View>
         </Card>
 
         <View style={{ marginTop: 14, gap: 10 }}>
-          <Button title="Create mock data" loading={loading} onPress={handleCreate} fullWidth />
-          <Button title="Remove mock data" variant="ghost" textStyle={{ color: t.colors.danger }} fullWidth onPress={handleRemove} />
+          <Button title="Add demo data" loading={loading} onPress={handleCreate} fullWidth />
+          <Button title="Remove demo data" variant="ghost" textStyle={{ color: t.colors.danger }} fullWidth onPress={handleRemove} />
         </View>
 
         <Text style={{ color: t.colors.ink4, fontSize: 11, marginTop: 22, textAlign: 'center' }}>
