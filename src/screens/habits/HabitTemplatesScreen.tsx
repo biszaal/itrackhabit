@@ -29,7 +29,10 @@ export const HabitTemplatesScreen: React.FC<HabitTemplatesScreenProps> = ({ navi
     });
   };
 
-  const categories = [{ id: 'all', name: 'All', icon: 'sparkle' }, ...HABIT_CATEGORIES];
+  // HABIT_CATEGORIES already leads with an 'all' entry. Prepending another
+  // gave two children the same key, which React warns about and which lets it
+  // drop or duplicate a chip.
+  const categories = HABIT_CATEGORIES;
 
   return (
     <Screen>
