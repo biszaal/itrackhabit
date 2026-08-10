@@ -27,10 +27,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "NSContactsUsageDescription": "This app needs access to your contacts to let you invite friends to join iTrackHabit.",
-        "NSUserNotificationsUsageDescription": "This app uses notifications to remind you about your habits.",
-        "NSCameraUsageDescription": "This app uses the camera to let you take photos for your habit progress.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to let you select images for your habits."
+        "NSUserNotificationsUsageDescription": "This app uses notifications to remind you about your habits."
       },
       "usesAppleSignIn": false
     },
@@ -43,7 +40,6 @@
         "backgroundColor": "#FBF6EE"
       },
       "permissions": [
-        "android.permission.READ_CONTACTS",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM"

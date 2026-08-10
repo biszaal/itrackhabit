@@ -1,86 +1,155 @@
 # Privacy Policy for iTrackHabit
 
-**Last updated: January 10, 2025**
+**Last updated: August 10, 2026**
+
+The published, canonical version of this policy — the one linked from the App
+Store and Google Play listings and from Profile → Privacy & security in the
+app — lives at:
+
+**[www.biszaaltech.com/apps/itrackhabit/privacy](https://www.biszaaltech.com/apps/itrackhabit/privacy)**
+
+This file is a copy for the repository. If the two ever disagree, the published
+page is authoritative. Keep them in step when either changes.
 
 ## Introduction
 
-iTrackHabit ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
+BISZAAL TECH LTD ("we," "our," or "us") develops iTrackHabit, a habit tracker
+for iOS and Android. This policy explains what information the app handles,
+where it lives, and what rights you have over it.
+
+The short version: iTrackHabit works entirely on your device. There is no
+account to create, no server to sign in to, and nothing about your habits is
+sent to us.
 
 ## Information We Collect
 
-### Data You Provide
+**We do not collect any personal information.** iTrackHabit has no user
+accounts, and we operate no server that receives your data. We cannot see your
+habits, your progress, or anything else you enter into the app.
 
-- **Habit Information**: The habits you create, including titles, descriptions, and tracking data
-- **Progress Data**: Your habit completion records, timestamps, and notes
-- **Account Information**: Email address and name (if you choose to create an account)
+### What the app stores on your device
 
-### Data We Do NOT Collect
+- The habits you create — names, icons, categories, schedules, and goals
+- Your progress: completions, streaks, timestamps, timer sessions, and notes
+- Achievements and badges you have earned
+- App preferences, such as theme, reminder times, and notification settings
 
-- **Location Data**: We do not track your location
-- **Device Information**: We do not collect device identifiers or analytics
-- **Usage Analytics**: We do not track how you use the app
-- **Third-Party Data**: We do not share data with third parties
+All of this is written to a private database on your device (SQLite, plus local
+app storage for settings) inside iTrackHabit's own sandboxed storage, which
+other apps cannot read. It is never transmitted to us or to anyone else.
 
-## How We Use Your Information
+### What the app does not collect
 
-Your data is used solely to:
+- No name, email address, phone number, or contacts
+- No location data
+- No advertising identifiers or device identifiers
+- No usage analytics, crash telemetry, or behavioural tracking
+- No health or fitness data from Apple Health or Google Fit
 
-- Provide habit tracking functionality
-- Display your progress and analytics
-- Sync your data across devices (if you choose to enable sync)
-- Improve app functionality
+## How Your Information Is Used
 
-## Data Storage and Security
+Everything the app stores is used on your device, by the app, to give you the
+features you asked for: showing your habits and streaks, drawing your charts,
+awarding achievements, and generating the insights and suggestions you see in
+the app. Those insights are calculated locally from your own records — nothing
+is sent anywhere to be analysed, and no artificial-intelligence service outside
+your device is involved.
 
-### Local Storage
+## Reminders and Notifications
 
-- All your habit data is stored locally on your device
-- Your data never leaves your device unless you explicitly choose to sync
-- We use industry-standard encryption for local data storage
+If you enable reminders, iTrackHabit schedules notifications through your
+device's own notification system. The reminder text — including your habit
+names — is prepared and delivered on your device. We do not operate a push
+server, and no notification content passes through us or any third party. You
+can turn reminders off at any time in the app or in your device settings.
 
-### Cloud Sync (Optional)
+## App Lock and Biometrics
 
-- If you choose to enable cloud sync, your data is encrypted before transmission
-- We use secure cloud infrastructure to store your data
-- You can disable cloud sync at any time
+You can optionally lock iTrackHabit behind Face ID, Touch ID, or your device's
+fingerprint or screen lock. This check is performed entirely by your operating
+system, which tells the app only whether the unlock succeeded. Your fingerprint,
+face data, and passcode are never shared with the app, and we never receive or
+store them.
 
-## Your Rights
+## Exporting and Importing Your Data
 
-You have the right to:
+iTrackHabit lets you export your habits, progress, and achievements to a file
+and import them back later. Export happens only when you ask for it: the app
+writes the file locally and hands it to your device's standard share sheet, so
+you choose where it goes — Files, iCloud Drive, email, or another app.
 
-- **Access**: View all your data at any time
-- **Export**: Download your data in a readable format
-- **Delete**: Remove your data completely
-- **Control**: Choose whether to sync your data to the cloud
+Once you send an exported file somewhere, it is governed by that destination's
+privacy practices, not this policy. We never receive a copy.
 
-## Data Sharing
+## Third-Party Services
 
-We do not share your personal information with:
+iTrackHabit contains no advertising, no analytics or tracking SDKs, no
+social-media integrations, and no in-app purchases. We do not sell, rent, or
+share your information with anyone, because we do not have it.
 
-- Third-party advertisers
-- Analytics companies
-- Social media platforms
-- Any other third parties
+The app is distributed through the Apple App Store and Google Play. Those stores
+handle your download, and they collect their own information about installs and
+any account you hold with them under their own privacy policies —
+[Apple](https://www.apple.com/legal/privacy/) and
+[Google](https://policies.google.com/privacy). That is separate from the app
+itself and outside our control.
+
+If we ever introduce a feature that sends data off your device — optional cloud
+sync, for example — we will update this policy and make the change clear in the
+app before it takes effect.
+
+## Data Retention and Deletion
+
+Your data stays on your device for as long as you keep the app installed. You
+can delete individual habits and their history inside the app, or erase
+everything from Profile → Export & backup. Uninstalling iTrackHabit removes its
+local database along with it.
+
+Because we hold no copy of your data, there is nothing for us to delete on our
+side and nothing we could restore for you — so export a backup first if you want
+to keep your history.
 
 ## Children's Privacy
 
-iTrackHabit is not intended for children under 13. We do not knowingly collect personal information from children under 13.
+iTrackHabit does not knowingly collect personal information from children, or
+from any other user, regardless of age. The app is not directed to children
+under 13, and it contains no advertising, no chat, and no other features that
+would gather information about a child. If we introduce any data collection in
+the future, we will take appropriate steps to comply with applicable children's
+privacy laws, including COPPA and UK data protection requirements.
+
+## Data Security
+
+Because iTrackHabit stores your data on your device instead of on our servers,
+that data stays under your control and is protected by your device's own
+security — its passcode, encryption, and app sandboxing — plus the optional app
+lock described above. We follow reasonable security practices in how we build
+and maintain the app.
+
+## Your Rights
+
+Under UK and EU data protection law you have the right to access, correct,
+delete, and port your personal data, and to object to its processing. In
+iTrackHabit you can exercise all of these directly: your data is visible in the
+app, editable at any time, deletable by you, and exportable to a file you own.
+We hold no personal data about you, so there is no request you need to send us
+in order to do any of it — but if you have a question or a complaint, contact us
+using the details below.
+
+You also have the right to lodge a complaint with the UK Information
+Commissioner's Office ([ico.org.uk](https://ico.org.uk)) or your local
+supervisory authority.
 
 ## Changes to This Policy
 
-We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy in the app.
+We may update this privacy policy from time to time — for example, if
+iTrackHabit gains a feature that changes how data is handled. We will post any
+changes on the published page with an updated "Last updated" date.
 
 ## Contact Us
 
-If you have any questions about this Privacy Policy, please contact us at:
+If you have any questions about this privacy policy, please contact us at:
 
-- Email: privacy@itrackhabit.com
-- GitHub: https://github.com/biszaal/iTrackHabit
-
-## Summary
-
-iTrackHabit is designed with privacy in mind. Your data stays on your device unless you choose to sync it. We don't track you, we don't share your data, and we don't show you ads. Your privacy is our priority.
-
----
-
-_This privacy policy is designed to be transparent and easy to understand. If you have any questions, please don't hesitate to contact us._
+- **BISZAAL TECH LTD**
+- Email: [hello@biszaaltech.com](mailto:hello@biszaaltech.com)
+- Address: 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ

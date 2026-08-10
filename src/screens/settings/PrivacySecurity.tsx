@@ -1,33 +1,27 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, Switch, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../theme/ThemeContext';
-import { Screen, AppHeader, Card, Button } from '../../components/ds';
+import { Screen, AppHeader, Card } from '../../components/ds';
 
+/**
+ * The app is offline-only (see config/runtime.ts): no accounts, no server, no
+ * analytics. This screen must not offer switches for data sharing, analytics,
+ * or leaderboards — none of them exist, and a toggle that does nothing is a
+ * false privacy claim. Biometric lock is the only real setting here.
+ */
 interface PrivacySettings {
   biometricAuth: boolean;
-  dataCollection: boolean;
-  analyticsOptOut: boolean;
-  shareUsageData: boolean;
-  friendsCanSeeProgress: boolean;
-  showInLeaderboards: boolean;
-  allowNotifications: boolean;
-  autoLockTimeout: number;
 }
 
 const DEFAULTS: PrivacySettings = {
   biometricAuth: false,
-  dataCollection: true,
-  analyticsOptOut: false,
-  shareUsageData: false,
-  friendsCanSeeProgress: true,
-  showInLeaderboards: true,
-  allowNotifications: true,
-  autoLockTimeout: 15,
 };
+
+const PRIVACY_POLICY_URL = 'https://www.biszaaltech.com/apps/itrackhabit/privacy';
+const TERMS_URL = 'https://www.biszaaltech.com/terms';
 
 const Row: React.FC<{
   icon: keyof typeof Ionicons.glyphMap;
@@ -88,7 +82,6 @@ const Row: React.FC<{
 
 export const PrivacySecurity: React.FC<{ navigation: any }> = ({ navigation }) => {
   const t = useTheme();
-  const { logout } = useAuth();
   const [settings, setSettings] = useState<PrivacySettings>(DEFAULTS);
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [biometricType, setBiometricType] = useState<string>('Biometric');
@@ -134,37 +127,12 @@ export const PrivacySecurity: React.FC<{ navigation: any }> = ({ navigation }) =
     }
   };
 
-  const handleClear = () => {
-    Alert.alert('Clear account data', 'Removes local data from this device. Your account remains active.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clear',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await AsyncStorage.clear();
-            await logout();
-          } catch {
-            Alert.alert('Could not clear', 'Try again.');
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete account',
-      'Permanently delete your account and all data. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => Alert.alert('Contact support', 'Email us at support@itrackhabit.com to delete your account.'),
-        },
-      ]
-    );
+  const openLink = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Could not open link', url);
+    }
   };
 
   return (
@@ -186,52 +154,43 @@ export const PrivacySecurity: React.FC<{ navigation: any }> = ({ navigation }) =
           />
         </Card>
 
-        <SectionTitle>Sharing</SectionTitle>
-        <Card variant="elevated" padding={0}>
+        <SectionTitle>Your data</SectionTitle>
+        <Card variant="elevated" padding={16}>
+          <Text style={{ color: t.colors.ink2, fontSize: 13, lineHeight: 20 }}>
+            iTrackHabit works entirely on this device. There is no account and no server, so your
+            habits and progress are never uploaded, and nothing about how you use the app is
+            collected, tracked, or shared. Uninstalling removes it all.
+          </Text>
+        </Card>
+        {/*
+          Erasing lives in Data & backup, which clears the SQLite habits as well
+          as AsyncStorage. The button that used to sit here wiped only
+          AsyncStorage while promising to delete everything.
+        */}
+        <Card variant="elevated" padding={0} style={{ marginTop: 10 }}>
           <Row
-            icon="people-outline"
-            title="Friends can see progress"
-            detail="Shared habits show streaks and rates"
-            value={settings.friendsCanSeeProgress}
-            onValueChange={(v) => update('friendsCanSeeProgress', v)}
-          />
-          <Row
-            icon="trophy-outline"
-            title="Appear in leaderboards"
-            value={settings.showInLeaderboards}
-            onValueChange={(v) => update('showInLeaderboards', v)}
+            icon="archive-outline"
+            title="Export or erase data"
+            detail="Back up to a file, or delete everything"
+            onPress={() => navigation.navigate('DataManagement')}
             isLast
           />
         </Card>
 
-        <SectionTitle>Data</SectionTitle>
+        <SectionTitle>Legal</SectionTitle>
         <Card variant="elevated" padding={0}>
           <Row
-            icon="analytics-outline"
-            title="Analytics"
-            detail="Help improve iTrackHabit"
-            value={!settings.analyticsOptOut}
-            onValueChange={(v) => update('analyticsOptOut', !v)}
+            icon="document-text-outline"
+            title="Privacy policy"
+            onPress={() => openLink(PRIVACY_POLICY_URL)}
           />
           <Row
-            icon="bar-chart-outline"
-            title="Anonymous usage"
-            value={settings.shareUsageData}
-            onValueChange={(v) => update('shareUsageData', v)}
+            icon="reader-outline"
+            title="Terms of service"
+            onPress={() => openLink(TERMS_URL)}
             isLast
           />
         </Card>
-
-        <SectionTitle>Account</SectionTitle>
-        <Card variant="elevated" padding={0}>
-          <Row icon="document-text-outline" title="Privacy policy" onPress={() => Alert.alert('Privacy', 'Open in browser.')} />
-          <Row icon="reader-outline" title="Terms of service" onPress={() => Alert.alert('Terms', 'Open in browser.')} isLast />
-        </Card>
-
-        <View style={{ marginTop: 22, gap: 8 }}>
-          <Button title="Clear account data" variant="ghost" textStyle={{ color: t.colors.danger }} fullWidth onPress={handleClear} />
-          <Button title="Delete account" variant="ghost" textStyle={{ color: t.colors.danger }} fullWidth onPress={handleDelete} />
-        </View>
       </ScrollView>
     </Screen>
   );

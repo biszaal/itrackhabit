@@ -6,7 +6,7 @@ const path = require('path');
  * Config plugin: raise every Pod target to the app's minimum iOS version.
  *
  * Several dependencies still declare very old minimums in their podspecs
- * (react-native-permissions 12.4, AsyncStorage 9.0, react-native-svg 12.4).
+ * (AsyncStorage 9.0, react-native-svg 12.4).
  * Xcode 26+ refuses to build anything below iOS 15.0:
  *
  *   The iOS Simulator deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set
