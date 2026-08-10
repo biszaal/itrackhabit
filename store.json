@@ -1,16 +1,100 @@
 {
   "configVersion": 0,
-  "ios": {
+  "apple": {
+    "version": "1.0.1",
+    "copyright": "2026 BISZAAL TECH LTD",
+    "release": {
+      "automaticRelease": true
+    },
     "info": {
-      "en-US": {
-        "title": "iTrackHabit - Habit Tracker",
-        "subtitle": "Build Better Routines",
-        "description": "Build better routines, one day at a time. iTrackHabit is a calm, beautiful habit tracker that works entirely on your device — no account, no sign-up, no waiting on a server.\n\n🌟 KEY FEATURES:\n\n✓ No Account Needed - Open the app and start tracking. There is nothing to sign up for.\n✓ Fully Offline - Everything lives on your device, so it works in airplane mode and never waits on a connection.\n✓ Smart Progress Tracking - Visual progress rings and streak counters keep you motivated\n✓ Flexible Habit Goals - Set daily, weekly, or custom frequency targets\n✓ Habit Templates - Start from a prepared habit, or build your own from scratch\n✓ Achievement Badges - Unlock rewards as you hit milestones and maintain streaks\n✓ Insights - Charts and patterns drawn from your own records, calculated on your device\n✓ Local Reminders - Gentle nudges at the times you choose\n✓ Export & Backup - Take your data out as a JSON or CSV file whenever you want\n\n🎯 PERFECT FOR:\n• Building morning routines\n• Fitness and health goals\n• Learning new skills\n• Breaking bad habits\n• Productivity improvement\n• Personal development\n\n🔒 GENUINELY PRIVATE:\nYour habits never leave your device. There is no account, no server, no advertising, and no analytics or tracking of any kind — we could not see your data even if we wanted to. Your data leaves only when you export it yourself.\n\n💪 START TODAY:\nWhether you want to drink more water, exercise daily, read regularly, or build any positive habit, iTrackHabit gives you the tools to stay with it.\n\nFree, with every feature unlocked. No subscriptions, no in-app purchases.",
-        "keywords": "habits,routine,productivity,goals,self-improvement,streak,offline,private,daily planner",
-        "marketingUrl": "https://www.biszaaltech.com",
+      "en-GB": {
+        "description": "Build Better Habits, One Day at a Time\n\niTrackHabit is a calm, beautifully designed habit tracker that runs entirely on your device. There is no account to create and no server to sign in to — open the app and start tracking.\n\nGenuinely Private\n• Works completely offline; your habits never leave your device\n• No account, no sign-up, no cloud\n• No ads, no analytics, no tracking of any kind\n• Your data leaves only when you export it yourself\n\nBeautiful & Intuitive Design\n• Stunning neumorphic interface that's easy on the eyes\n• Smooth animations and delightful interactions\n• Clean, distraction-free experience\n• Light and dark mode\n\nSmart Habit Tracking\n• Track daily, weekly, or custom frequency habits\n• Set specific targets (time, count, or custom metrics)\n• Visual progress rings and completion tracking\n• Start from a habit template or build your own\n• A focus timer for habits you sit down to do\n\nInsights That Stay on Your Device\n• Beautiful charts showing your progress over time\n• Streak tracking and completion rates\n• Personalised patterns and suggestions, calculated locally from your own records\n\nMotivation & Achievements\n• Earn badges for consistency and milestones\n• Build impressive streaks\n• Celebrate every step of your progress\n\nYours to Keep\n• Export everything to a JSON or CSV file whenever you like\n• Import it back on a new device\n• Optional Face ID or Touch ID lock for the app\n\nPerfect for:\n• Building exercise routines\n• Developing meditation practices\n• Learning new skills\n• Drinking more water\n• Reading daily\n• Any positive habit you want to establish\n\nCompletely free, with every feature unlocked. No subscriptions, no in-app purchases, no premium tier.\n\nStart building the life you want, one habit at a time.",
+        "keywords": [
+          "habits",
+          "productivity",
+          "tracking",
+          "wellness",
+          "self-improvement",
+          "routine",
+          "goals",
+          "streak",
+          "offline",
+          "private"
+        ],
+        "promoText": "A calm habit tracker that works entirely offline. No account, no ads, no tracking — just your habits, on your device. Start today!",
         "supportUrl": "https://www.biszaaltech.com",
+        "title": "iTrackHabit",
+        "subtitle": "Offline, Private Habit Tracker",
+        "screenshots": {
+          "APP_IPAD_PRO_3GEN_129": [
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-01-today-2048x2732.jpg",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-02-templates-2048x2732.jpg",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-03-habit-detail-2048x2732.jpg",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-04-focus-mode-2048x2732.jpg",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-05-calendar-2048x2732.jpg",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-06-insights-2048x2732.jpg",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-07-awards-2048x2732.jpg"
+          ],
+          "APP_IPHONE_65": [
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-01-today-1284x2778.jpg",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-02-focus-mode-1284x2778.jpg",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-03-calendar-1284x2778.jpg",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-04-insights-1284x2778.jpg",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-05-awards-1284x2778.jpg",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-06-templates-1284x2778.jpg"
+          ],
+          "APP_IPHONE_67": [
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.03.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.48.48.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.13.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.54.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.21.png"
+          ]
+        },
+        "marketingUrl": "https://www.biszaaltech.com",
         "privacyPolicyUrl": "https://www.biszaaltech.com/apps/itrackhabit/privacy"
       }
+    },
+    "categories": [
+      "LIFESTYLE",
+      "HEALTH_AND_FITNESS"
+    ],
+    "advisory": {
+      "ageRatingOverride": "NONE",
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "kidsAgeBand": null,
+      "koreaAgeRatingOverride": "NONE",
+      "lootBox": false,
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "advertising": false,
+      "ageAssurance": false,
+      "ageRatingOverrideV2": "NONE",
+      "developerAgeRatingInfoUrl": null,
+      "gunsOrOtherWeapons": "NONE",
+      "healthOrWellnessTopics": true,
+      "messagingAndChat": false,
+      "parentalControls": false,
+      "userGeneratedContent": false
+    },
+    "review": {
+      "firstName": "Bishnu",
+      "lastName": "Aryal",
+      "email": "biszaaltechltd@gmail.com",
+      "phone": "+447729411417",
+      "demoRequired": false,
+      "notes": "## Note for the reviewer\n\nNo sign-in is required. iTrackHabit has no accounts and no login screen; opening the app takes you straight to the habit list, and every feature is available immediately.\n\nThe app is fully offline. Habits and their history are stored on the device in a local SQLite database. There is no backend server, no user account, and\nno network request in normal use, so the app works with airplane mode on. Nothing is collected, transmitted, or shared.\n\nThere is no paid tier, no subscription, and no in-app purchase. Every feature is free and unlocked.\n\n**How to try it in about a minute**\n\n1. Open the app. Two starter habits are created on first launch.\n2. Tap the circle on the right of a habit row to mark it done, the ring at the top updates immediately.\n3. Tap \"+\" to add a habit, or use Templates to pick a prepared one.\n4. Open the Insights and Awards tabs to see charts and achievements. These fill out as habits are completed, so on a fresh install they will be mostly empty — this is expected, not a defect.\n5. Profile → Export & backup writes the data to a JSON or CSV file. This is the only way data leaves the device, and only when you tap it.\n\n**Permissions**\n\nThe app asks for notification permission only, and only to schedule local habit reminders. These are local notifications; there is no push server and no device token is sent anywhere.\n\nProfile → Privacy & security offers an optional biometric app lock. It is **off by default** and must be switched on deliberately, so it will not block review. If you do enable it, the system passcode works as a fallback.\n\n**Data and privacy**\n\nNo account, no analytics, no advertising, no third-party SDKs collecting data. Because there is no server, there is nothing to delete server-side; uninstalling the app removes all of its data. Account deletion requirements under 5.1.1(v) do not apply, as no account is ever created.\n\nThank you for reviewing."
     }
   }
 }

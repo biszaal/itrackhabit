@@ -35,7 +35,8 @@
       "ios": {
         "appleId": "biszaal@icloud.com",
         "appleTeamId": "HG4G2ZMGV8",
-        "ascAppId": "6751805707"
+        "ascAppId": "6751805707",
+        "metadataPath": "./store.json"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account-key.json",

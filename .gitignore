@@ -19,3 +19,6 @@ android/
 # typescript / metro
 *.tsbuildinfo
 .metro-health-check*
+
+# EAS metadata (screenshots pulled from App Store Connect)
+store/
