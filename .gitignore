@@ -22,3 +22,7 @@ android/
 
 # EAS metadata (screenshots pulled from App Store Connect)
 store/
+
+# Raw simulator captures for store screenshots (intermediates; the framed
+# results in store/apple/screenshot/ are what ship)
+scripts/store-screenshots/captures/
