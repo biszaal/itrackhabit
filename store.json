@@ -31,26 +31,26 @@
           "APP_IPAD_PRO_3GEN_129": [
             "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-01-today-2048x2732.png",
             "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-02-templates-2048x2732.png",
-            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-03-habit-detail-2048x2732.png",
-            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-04-focus-mode-2048x2732.png",
-            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-05-calendar-2048x2732.png",
-            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-06-insights-2048x2732.png",
-            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-07-awards-2048x2732.png"
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-03-focus-2048x2732.png",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-04-calendar-2048x2732.png",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-05-insights-2048x2732.png",
+            "store/apple/screenshot/en-GB/APP_IPAD_PRO_3GEN_129/itrackhabit-06-awards-2048x2732.png"
           ],
           "APP_IPHONE_65": [
             "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-01-today-1284x2778.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-02-focus-mode-1284x2778.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-03-calendar-1284x2778.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-04-insights-1284x2778.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-05-awards-1284x2778.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-06-templates-1284x2778.png"
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-02-templates-1284x2778.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-03-focus-1284x2778.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-04-calendar-1284x2778.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-05-insights-1284x2778.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_65/itrackhabit-06-awards-1284x2778.png"
           ],
           "APP_IPHONE_67": [
-            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.03.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.48.48.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.13.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.54.png",
-            "store/apple/screenshot/en-GB/APP_IPHONE_67/Simulator Screenshot - iPhone 16 Pro Max - 2025-09-02 at 21.49.21.png"
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/itrackhabit-01-today-1320x2868.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/itrackhabit-02-templates-1320x2868.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/itrackhabit-03-focus-1320x2868.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/itrackhabit-04-calendar-1320x2868.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/itrackhabit-05-insights-1320x2868.png",
+            "store/apple/screenshot/en-GB/APP_IPHONE_67/itrackhabit-06-awards-1320x2868.png"
           ]
         }
       }
