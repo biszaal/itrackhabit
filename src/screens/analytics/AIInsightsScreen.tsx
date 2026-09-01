@@ -89,18 +89,6 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
         subtitle="Patterns from your last 30 days."
         back
         onBack={() => navigation.goBack()}
-        action={
-          <View
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
-              backgroundColor: t.colors.primary,
-            }}
-          >
-            <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Premium</Text>
-          </View>
-        }
       />
 
       <ScrollView

@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, Pressable } from 'react-native';
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop, Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import { aiInsightsService, HabitInsight } from '../../services/analytics';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, useTabBarHeight } from '../../components/ds';
-import { Glyph, GlyphName, HabitIcon } from '../../components/art';
+import { Glyph, HabitIcon, resolveGlyph } from '../../components/art';
 
 const tint = (hex: string, ratio: number, bg: string): string => {
   const h = hex.replace('#', '');
@@ -84,6 +85,24 @@ const Analytics: React.FC = () => {
     return { label: '→ steady', color: t.colors.ink3 };
   }, [trendData, t.colors]);
 
+  // Insights are derived from this device's own records, the same way the AI
+  // insights screen does it. Recomputed whenever the analytics window reloads,
+  // so pull-to-refresh keeps this section in step with the charts above.
+  const [insights, setInsights] = useState<HabitInsight[]>([]);
+
+  const loadInsights = useCallback(async () => {
+    try {
+      setInsights(await aiInsightsService.analyzeHabitPatterns());
+    } catch {
+      // Nothing to say beats saying something invented.
+      setInsights([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInsights();
+  }, [loadInsights, analyticsData]);
+
   if (loading && !analyticsData) {
     return (
       <Screen>
@@ -99,6 +118,8 @@ const Analytics: React.FC = () => {
     .slice()
     .sort((a: any, b: any) => (b.currentStreak ?? 0) - (a.currentStreak ?? 0))
     .slice(0, 4);
+
+  const insightColors = [t.colors.primary, t.colors.sage, t.colors.amber];
 
   const totalCompletions = (analyticsData?.habitStats ?? []).reduce(
     (sum, h: any) => sum + (h.totalCompletions ?? 0),
@@ -273,46 +294,48 @@ const Analytics: React.FC = () => {
         )}
 
         {/* AI insights */}
-        <View
+        <Text
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
+            color: t.colors.ink,
+            fontSize: 20,
+            fontWeight: '700',
+            letterSpacing: -0.4,
             marginTop: 24,
             marginBottom: 10,
           }}
         >
-          <Text style={{ color: t.colors.ink, fontSize: 20, fontWeight: '700', letterSpacing: -0.4 }}>
-            AI insights
-          </Text>
-          <View
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 999,
-              backgroundColor: t.colors.primary,
-            }}
-          >
-            <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Premium</Text>
-          </View>
-        </View>
+          AI insights
+        </Text>
         <View style={{ gap: 10 }}>
-          {([
-            ['sunrise', 'Mornings work for you', 'Habits done before 10am have a 92% completion rate vs. 64% in the afternoon.', t.colors.primary],
-            ['link', 'Try habit stacking', 'On days you run, you meditate 38% more reliably. Stack them.', t.colors.sage],
-            ['warning', 'Watch Tuesdays', "It's your weakest day this month — try one easy keystone habit.", t.colors.amber],
-          ] as [GlyphName, string, string, string][]).map(([g, h, b, c], i) => (
-            <Card key={i} variant="elevated" padding={16} style={{ position: 'relative', overflow: 'hidden' }}>
-              <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, backgroundColor: c }} />
-              <View style={{ flexDirection: 'row', gap: 12, paddingLeft: 6 }}>
-                <Glyph name={g} size={26} color={c} surface={t.colors.bgElev} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>{h}</Text>
-                  <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2, lineHeight: 18 }}>{b}</Text>
-                </View>
-              </View>
+          {insights.length === 0 ? (
+            <Card variant="elevated" padding={18} style={{ alignItems: 'center', gap: 6 }}>
+              <Glyph name="sparkle" size={30} color={t.colors.primary} surface={t.colors.bgElev} />
+              <Text style={{ color: t.colors.ink, fontSize: 15, fontWeight: '700', marginTop: 4 }}>
+                No insights yet
+              </Text>
+              <Text style={{ color: t.colors.ink2, fontSize: 13, lineHeight: 18, textAlign: 'center' }}>
+                Complete more habits to generate personalized patterns.
+              </Text>
             </Card>
-          ))}
+          ) : (
+            insights.slice(0, 3).map((it, i) => {
+              const c = insightColors[i % insightColors.length];
+              return (
+                <Card key={it.id} variant="elevated" padding={16} style={{ position: 'relative', overflow: 'hidden' }}>
+                  <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, backgroundColor: c }} />
+                  <View style={{ flexDirection: 'row', gap: 12, paddingLeft: 6 }}>
+                    <Glyph name={resolveGlyph(undefined, it.title)} size={26} color={c} surface={t.colors.bgElev} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>{it.title}</Text>
+                      <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 2, lineHeight: 18 }}>
+                        {it.description}
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              );
+            })
+          )}
         </View>
 
         {/* Compound progress */}
