@@ -26,7 +26,6 @@ import {
   HabitRow,
   FAB,
   WeekDots,
-  OfflinePill,
   Button,
   useTabBarHeight,
 } from '../components/ds';
@@ -247,7 +246,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               marginBottom: 14,
             }}
           >
-            <OfflinePill />
+            <View />
             <Pressable
               onPress={() => navigation.navigate('NotificationSettingsNew')}
               hitSlop={8}
@@ -447,7 +446,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 const targetLabel = isTimeBased
                   ? `${target} min`
                   : `${target} ${habit.targetConfig?.unit ?? (target === 1 ? 'time' : 'times')}`;
-                const synced = habit.type === 'health' || habit.healthConfig != null;
                 return (
                   <HabitRow
                     key={habit.id}
@@ -458,7 +456,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     done={current}
                     total={Math.max(target, 1)}
                     partial={partial}
-                    synced={synced}
                     onPress={() => handleOpenHabit(habit.id)}
                     onToggle={() => handleToggleHabit(habit)}
                   />

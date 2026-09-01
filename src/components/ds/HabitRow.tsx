@@ -12,7 +12,6 @@ interface Props {
   color?: string;
   done?: number;
   total?: number;
-  synced?: boolean;
   partial?: boolean;
   onPress?: () => void;
   onToggle?: () => void;
@@ -26,7 +25,6 @@ export const HabitRow: React.FC<Props> = ({
   color,
   done = 0,
   total = 1,
-  synced,
   partial,
   onPress,
   onToggle,
@@ -100,21 +98,13 @@ export const HabitRow: React.FC<Props> = ({
           >
             {name}
           </Text>
-          {(target || synced) && (
+          {target ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-              {target ? (
-                <Text style={{ fontSize: 12, color: t.colors.ink3 }} numberOfLines={1}>
-                  {target}
-                </Text>
-              ) : null}
-              {synced && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="pulse" size={12} color={accent} />
-                  <Text style={{ fontSize: 12, color: accent, fontWeight: '600' }}>Synced</Text>
-                </View>
-              )}
+              <Text style={{ fontSize: 12, color: t.colors.ink3 }} numberOfLines={1}>
+                {target}
+              </Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* trailing — check or partial */}
