@@ -11,4 +11,3 @@ export {
   type HabitCorrelation,
   type OptimalTiming
 } from './AIInsightsService';
-export { userStatsService } from './UserStatsService';

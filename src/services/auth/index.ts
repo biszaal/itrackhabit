@@ -4,4 +4,3 @@
  */
 
 export { backendAuthService as authService } from './BackendAuthService';
-export { onboardingService } from './OnboardingService';

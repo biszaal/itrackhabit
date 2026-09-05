@@ -1,4 +1,4 @@
-import { apiClient, API_CONFIG } from '../../constants/api';
+import { apiClient } from '../../config/api';
 import { 
   Badge, 
   UserBadge, 
@@ -281,7 +281,7 @@ class BadgeService {
   async checkHabitCompletionBadges(progress: HabitProgress): Promise<UserBadge[]> {
     try {
       const earnedBadges = await apiClient.post<UserBadge[]>(
-        API_CONFIG.ENDPOINTS.BADGES.CHECK_ACHIEVEMENTS,
+        '/badges/check-achievements',
         { progress }
       );
       

@@ -11,5 +11,4 @@ export { Stat } from './Stat';
 export { Heat, HeatGrid } from './Heat';
 export { WeekDots } from './WeekDots';
 export { TabBar, useTabBarHeight } from './TabBar';
-export { OfflineNotice } from './OfflineNotice';
 export { Field } from './Field';
