@@ -199,6 +199,78 @@ describe("HomeScreen", () => {
     expect(mockNavigation.navigate).toHaveBeenCalledWith("HabitTemplates");
   });
 
+  it("keeps a habit checked after its timer is reset by completing it", async () => {
+    // Completing a timed session marks the habit done and resets the timer to
+    // zero. The reset timer must not drag the row back to "not done yet".
+    mockDataService.getHabitProgressForDate.mockImplementation(
+      async (habitId: string) =>
+        habitId === "habit1"
+          ? ({ id: "p1", habitId, status: "done", currentValue: 0 } as any)
+          : null
+    );
+    mockTimerService.getTimer.mockImplementation((habitId: string) =>
+      habitId === "habit1"
+        ? ({
+            habitId,
+            currentTime: 0,
+            targetTime: 1800,
+            isRunning: false,
+            isPaused: false,
+            startTime: Date.now(),
+          } as any)
+        : (null as any)
+    );
+
+    const { getByLabelText } = renderHomeScreen();
+
+    await waitFor(() => {
+      expect(
+        getByLabelText("Mark Exercise 30 min as not done")
+      ).toBeTruthy();
+    });
+  });
+
+  it("marks a running timed habit done when its checkbox is tapped", async () => {
+    mockDataService.getHabitProgressForDate.mockResolvedValue(null as any);
+    mockTimerService.getTimer.mockImplementation((habitId: string) =>
+      habitId === "habit1"
+        ? ({
+            habitId,
+            // 5 minutes into a 30 minute session — the row renders as partial.
+            currentTime: 300,
+            targetTime: 1800,
+            isRunning: true,
+            isPaused: false,
+            startTime: Date.now(),
+          } as any)
+        : (null as any)
+    );
+    mockDataService.markHabitProgress.mockResolvedValue({
+      id: "p1",
+      habitId: "habit1",
+      status: "done",
+      currentValue: 5,
+    } as any);
+
+    const { getByLabelText } = renderHomeScreen();
+
+    const partialButton = await waitFor(() =>
+      getByLabelText("Mark Exercise 30 min as done, currently 5 of 30")
+    );
+    fireEvent.press(partialButton);
+
+    await waitFor(() => {
+      expect(mockDataService.markHabitProgress).toHaveBeenCalledWith(
+        "habit1",
+        expect.any(String),
+        "done"
+      );
+      // The session should not keep ticking on a completed habit.
+      expect(mockTimerService.resetTimer).toHaveBeenCalledWith("habit1");
+      expect(getByLabelText("Mark Exercise 30 min as not done")).toBeTruthy();
+    });
+  });
+
   it("falls back to an empty list when loading fails", async () => {
     mockDataService.getUserData.mockRejectedValue(new Error("db unavailable"));
 

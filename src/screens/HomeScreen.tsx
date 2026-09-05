@@ -137,10 +137,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+  const isHabitDone = (habit: any): boolean => {
+    const record = dayProgress[habit.id];
+    if (record) return record.status === 'done';
+    return isToday ? !!habit.isDoneToday : false;
+  };
+
   const computeProgress = (habit: any) => {
     const target = habit.targetConfig?.targetValue ?? 1;
     const isTimeBased = habit.targetConfig?.isTimeBased ?? false;
     const record = dayProgress[habit.id];
+
+    // A habit that is marked done is full, whatever its timer says. Completing
+    // a session from the timer screen resets that timer to zero, and letting
+    // the zero win below made the row render as untouched the moment the user
+    // marked it complete.
+    if (isHabitDone(habit)) return { current: target, target, isTimeBased };
 
     // For today we can trust the habit's own rollup as a fallback; for any
     // other day the stored record is the only source of truth.
@@ -148,27 +160,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       ? habit.currentProgress?.currentValue ?? 0
       : record?.currentValue ?? 0;
 
-    if (record) {
-      current = record.status === 'done' ? target : record.currentValue ?? 0;
-    }
+    if (record) current = record.currentValue ?? 0;
 
     const activeTimer = timerService.getTimer?.(habit.id);
     if (activeTimer && isTimeBased && isToday) {
       const m = Math.floor(activeTimer.currentTime / 60);
-      if (activeTimer.currentTime === 0 && !activeTimer.isRunning && !activeTimer.isPaused) {
-        current = 0;
-      } else {
-        current = Math.max(current, m);
-      }
+      // A timer sitting at zero means the session was reset — drop any stale
+      // rollup so the row does not show progress the timer no longer holds.
+      current =
+        activeTimer.currentTime === 0 && !activeTimer.isRunning && !activeTimer.isPaused
+          ? 0
+          : Math.max(current, m);
     }
-    if (isToday && habit.isDoneToday) current = target;
     return { current, target, isTimeBased };
-  };
-
-  const isHabitDone = (habit: any): boolean => {
-    const record = dayProgress[habit.id];
-    if (record) return record.status === 'done';
-    return isToday ? !!habit.isDoneToday : false;
   };
 
   const completed = habits.filter(isHabitDone).length;
@@ -199,6 +203,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     try {
       const saved = await dataService.markHabitProgress(habit.id, selectedISO, newStatus);
       setDayProgress((prev) => ({ ...prev, [habit.id]: saved }));
+      // A finished habit should not leave a session ticking behind it — the
+      // timer screen does the same on its own Complete button.
+      if (newStatus === 'done' && isToday) {
+        await timerService.resetTimer?.(habit.id);
+      }
       await loadData();
     } catch (e) {
       console.warn('toggle failed', e);
@@ -442,7 +451,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={{ gap: 10 }}>
               {habits.map((habit) => {
                 const { current, target, isTimeBased } = computeProgress(habit);
-                const partial = !habit.isDoneToday && current > 0 && current < target && (target > 1 || isTimeBased);
+                const partial =
+                  !isHabitDone(habit) &&
+                  current > 0 &&
+                  current < target &&
+                  (target > 1 || isTimeBased);
                 const targetLabel = isTimeBased
                   ? `${target} min`
                   : `${target} ${habit.targetConfig?.unit ?? (target === 1 ? 'time' : 'times')}`;
