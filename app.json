@@ -21,7 +21,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.biszaal.itrackhabit",
-      "buildNumber": "28",
+      "buildNumber": "29",
       "requireFullScreen": false,
       "config": {
         "usesNonExemptEncryption": false
