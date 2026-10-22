@@ -1,0 +1,28 @@
+name: Supabase keep-alive
+
+# Free-plan Supabase projects pause after a stretch with no activity, and a
+# paused project silently drops every feedback message the app sends. One
+# tiny request a day keeps it awake. If this job fails, the project has
+# probably paused: restore it from the Supabase dashboard.
+#
+# The URL and publishable key are public by design (they ship inside the
+# app), and ping() is the only thing this call can reach.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping feedback database
+        run: |
+          body=$(curl -sS --fail-with-body -X POST \
+            "https://abpyvxtteulfyhprmaad.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_nICy1-CokF8dhTEUIBiJEQ_RbEmtOdD" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "$body"
+          test "$body" = '"ok"'

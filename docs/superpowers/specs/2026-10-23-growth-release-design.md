@@ -62,7 +62,7 @@ Returns `'ok'` after a trivial read of `feedback`. `EXECUTE` is granted to `anon
 
 ### Keep-alive
 
-A GitHub Actions workflow in the `frontend` repo (`.github/workflows/supabase-keepalive.yml`) runs daily on a cron schedule. It POSTs to `/rest/v1/rpc/ping` with the publishable key, so a free-plan project is never idle long enough to pause. The URL and key go in as repository variables; both are public values.
+A GitHub Actions workflow in the `frontend` repo (`.github/workflows/supabase-keepalive.yml`) runs daily on a cron schedule. It POSTs to `/rest/v1/rpc/ping` with the publishable key, so a free-plan project is never idle long enough to pause. The URL and key are written directly into the workflow, because both are public values that already ship inside the app. GitHub runs scheduled workflows only from the default branch (`main`), so the job starts once this work is merged there.
 
 ### Repo layout and deployment
 
