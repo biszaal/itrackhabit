@@ -20,6 +20,7 @@ import { HabitTimerScreen } from '../screens/habits/HabitTimerScreen';
 import { HabitConfigScreen } from '../screens/habits/HabitConfigScreen';
 import { HabitEditScreen } from '../screens/habits/HabitEditScreen';
 import HabitNotificationSettingsScreen from '../screens/habits/HabitNotificationSettingsScreen';
+import HabitNotificationHabitsScreen from '../screens/habits/HabitNotificationHabitsScreen';
 import NotificationSettingsScreen from '../screens/settings/NotificationSettingsScreen';
 import Analytics from '../screens/analytics/Analytics';
 import { AIInsightsScreen } from '../screens/analytics/AIInsightsScreen';
@@ -173,18 +174,26 @@ export function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="HabitNotificationHabits"
+          component={HabitNotificationHabitsScreen}
+          options={{
+            title: 'Smart Notifications',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="HabitNotificationSettings"
           component={HabitNotificationSettingsScreen}
           options={{
             title: 'Smart Notifications',
-            presentation: 'modal',
+            headerShown: false,
           }}
         />
         <Stack.Screen
           name="AIInsights"
           component={AIInsightsScreen}
           options={{
-            title: 'AI Insights',
+            title: 'Insights',
             headerShown: false,
           }}
         />

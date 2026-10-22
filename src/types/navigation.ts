@@ -13,7 +13,8 @@ export type RootStackParamList = {
   HabitConfig: { habitTemplate: any };
   HabitEdit: { habit: any };
   Settings: undefined;
-  HabitNotificationSettings: undefined;
+  HabitNotificationSettings: { habitId: string };
+  HabitNotificationHabits: undefined;
   Onboarding: undefined;
   HealthPermissions: { habitId?: string };
   CompoundProgress: undefined;

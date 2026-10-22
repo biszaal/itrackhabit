@@ -293,7 +293,7 @@ const Analytics: React.FC = () => {
           </View>
         )}
 
-        {/* AI insights */}
+        {/* Insights */}
         <Text
           style={{
             color: t.colors.ink,
@@ -304,7 +304,7 @@ const Analytics: React.FC = () => {
             marginBottom: 10,
           }}
         >
-          AI insights
+          Insights
         </Text>
         <View style={{ gap: 10 }}>
           {insights.length === 0 ? (
@@ -314,7 +314,7 @@ const Analytics: React.FC = () => {
                 No insights yet
               </Text>
               <Text style={{ color: t.colors.ink2, fontSize: 13, lineHeight: 18, textAlign: 'center' }}>
-                Complete more habits to generate personalized patterns.
+                Complete more habits to see patterns in your tracking.
               </Text>
             </Card>
           ) : (

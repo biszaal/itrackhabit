@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { RootStackScreenProps } from '../../types/navigation';
 import {
   aiInsightsService,
   HabitInsight,
   HabitRecommendation,
   PersonalizedCoaching,
-  HabitCorrelation,
 } from '../../services/analytics';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Button } from '../../components/ds';
@@ -15,7 +13,7 @@ import { Glyph, GlyphName, Medallion, resolveGlyph } from '../../components/art'
 
 type AIInsightsScreenProps = RootStackScreenProps<'AIInsights'>;
 
-type Tab = 'insights' | 'recs' | 'coaching' | 'corr';
+type Tab = 'insights' | 'recs' | 'coaching';
 
 const SegTab: React.FC<{ active: boolean; label: string; onPress: () => void }> = ({ active, label, onPress }) => {
   const t = useTheme();
@@ -45,7 +43,6 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
   const [insights, setInsights] = useState<HabitInsight[]>([]);
   const [recs, setRecs] = useState<HabitRecommendation[]>([]);
   const [coaching, setCoaching] = useState<PersonalizedCoaching[]>([]);
-  const [corr, setCorr] = useState<HabitCorrelation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -53,16 +50,14 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
     setLoading(true);
     try {
       await aiInsightsService.initialize();
-      const [r, i, c, co] = await Promise.all([
+      const [r, i, c] = await Promise.all([
         aiInsightsService.getRecommendations(),
         aiInsightsService.getInsights(),
         aiInsightsService.getCoachingMessages(),
-        aiInsightsService.analyzeHabitCorrelations(),
       ]);
       setRecs(r ?? []);
       setInsights(i ?? []);
       setCoaching(c ?? []);
-      setCorr(co ?? []);
     } catch (e) {
       Alert.alert('Could not load', 'Try again.');
     } finally {
@@ -85,8 +80,8 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
   return (
     <Screen>
       <AppHeader
-        title="AI insights"
-        subtitle="Patterns from your last 30 days."
+        title="Insights"
+        subtitle="Patterns from your own tracking."
         back
         onBack={() => navigation.goBack()}
       />
@@ -108,7 +103,6 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
           <SegTab active={tab === 'insights'} label="Insights" onPress={() => setTab('insights')} />
           <SegTab active={tab === 'recs'} label="Suggest" onPress={() => setTab('recs')} />
           <SegTab active={tab === 'coaching'} label="Coach" onPress={() => setTab('coaching')} />
-          <SegTab active={tab === 'corr'} label="Links" onPress={() => setTab('corr')} />
         </View>
 
         {loading ? (
@@ -119,7 +113,7 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
           <View style={{ marginTop: 16, gap: 10 }}>
             {tab === 'insights' &&
               (insights.length === 0 ? (
-                <EmptyState glyph="sparkle" title="No insights yet" message="Complete more habits to generate personalized patterns." />
+                <EmptyState glyph="sparkle" title="No insights yet" message="Complete more habits to see patterns in your tracking." />
               ) : (
                 insights.map((it, i) => (
                   <Card key={i} variant="elevated" padding={16} style={{ position: 'relative', overflow: 'hidden' }}>
@@ -184,23 +178,6 @@ export const AIInsightsScreen: React.FC<AIInsightsScreenProps> = ({ navigation }
                 ))
               ))}
 
-            {tab === 'corr' &&
-              (corr.length === 0 ? (
-                <EmptyState glyph="link" title="No correlations" message="Pairs of habits will show up here when patterns emerge." />
-              ) : (
-                corr.map((c, i) => (
-                  <Card key={i} variant="elevated" padding={16}>
-                    <Text style={{ color: t.colors.ink, fontSize: 14 }}>
-                      <Text style={{ fontWeight: '700' }}>{(c as any).habitA ?? (c as any).habit1}</Text>{' '}
-                      <Text style={{ color: t.colors.ink3 }}>+</Text>{' '}
-                      <Text style={{ fontWeight: '700' }}>{(c as any).habitB ?? (c as any).habit2}</Text>
-                    </Text>
-                    <Text style={{ color: t.colors.ink2, fontSize: 13, marginTop: 4 }}>
-                      {(c as any).explanation ?? `Strength: ${Math.round(((c as any).strength ?? 0) * 100)}%`}
-                    </Text>
-                  </Card>
-                ))
-              ))}
           </View>
         )}
       </ScrollView>

@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { dataService } from "../core/DataService";
 import { achievementService } from "../premium/AchievementService";
-import { Habit, HabitWithStats, HabitProgress } from "../../types";
+import { HabitWithStats, HabitProgress } from "../../types";
 
 export interface HabitRecommendation {
   id: string;
@@ -38,21 +38,6 @@ export interface HabitInsight {
   createdAt: string;
 }
 
-export interface OptimalTiming {
-  habitId: string;
-  recommendedTimes: {
-    hour: number;
-    minute: number;
-    confidence: number;
-    reason: string;
-  }[];
-  avoidTimes: {
-    hour: number;
-    minute: number;
-    reason: string;
-  }[];
-}
-
 export interface PersonalizedCoaching {
   id: string;
   type: "motivation" | "strategy" | "reminder" | "celebration";
@@ -62,17 +47,6 @@ export interface PersonalizedCoaching {
   triggerCondition: string;
   isActive: boolean;
   createdAt: string;
-}
-
-export interface HabitCorrelation {
-  habitA: string;
-  habitB: string;
-  habitATitle: string;
-  habitBTitle: string;
-  correlation: number; // -1 to 1
-  strength: "weak" | "moderate" | "strong";
-  type: "positive" | "negative";
-  insight: string;
 }
 
 class AIInsightsService {
@@ -299,9 +273,6 @@ class AIInsightsService {
     // Analyze completion patterns
     newInsights.push(...(await this.analyzeCompletionPatterns(habits)));
 
-    // Analyze timing patterns
-    newInsights.push(...(await this.analyzeTimingPatterns(habits)));
-
     // Analyze performance trends
     newInsights.push(...(await this.analyzePerformanceTrends(habits)));
 
@@ -400,44 +371,6 @@ class AIInsightsService {
     };
   }
 
-  private async analyzeTimingPatterns(
-    habits: HabitWithStats[]
-  ): Promise<HabitInsight[]> {
-    const insights: HabitInsight[] = [];
-
-    // Mock timing analysis (in a real app, this would analyze actual completion times)
-    const highPerformingHabits = habits.filter((h) => h.completionRate > 80);
-    const morningHabits = highPerformingHabits.filter(
-      (h) =>
-        (h.title || "").toLowerCase().includes("morning") ||
-        (h.title || "").toLowerCase().includes("exercise")
-    );
-
-    if (morningHabits.length > 0) {
-      insights.push({
-        id: `timing_morning_${Date.now()}`,
-        type: "timing",
-        title: "Morning Momentum Pattern",
-        description: `You're ${Math.round(
-          (morningHabits.length / highPerformingHabits.length) * 100
-        )}% more successful with morning habits`,
-        data: {
-          metric: "Morning habit success rate",
-          value: `${Math.round(
-            morningHabits.reduce((sum, h) => sum + h.completionRate, 0) /
-              morningHabits.length
-          )}%`,
-          trend: "stable",
-        },
-        actionable: true,
-        relatedHabits: morningHabits.map((h) => h.id),
-        createdAt: new Date().toISOString(),
-      });
-    }
-
-    return insights;
-  }
-
   private async analyzePerformanceTrends(
     habits: HabitWithStats[]
   ): Promise<HabitInsight[]> {
@@ -470,110 +403,6 @@ class AIInsightsService {
     }
 
     return insights;
-  }
-
-  // Optimal Timing Suggestions
-  async getOptimalTiming(habitId: string): Promise<OptimalTiming> {
-    // Mock optimal timing analysis (in a real app, this would analyze user's historical data)
-    const habits = await dataService.getHabits();
-    const habit = habits.find((h) => h.id === habitId);
-    if (!habit) {
-      throw new Error("Habit not found");
-    }
-
-    // Simple heuristic based on habit type
-    const recommendations = this.getTimeRecommendationsByType(
-      habit.type || "general"
-    );
-
-    return {
-      habitId,
-      recommendedTimes: recommendations.optimal,
-      avoidTimes: recommendations.avoid,
-    };
-  }
-
-  private getTimeRecommendationsByType(type: string): {
-    optimal: {
-      hour: number;
-      minute: number;
-      confidence: number;
-      reason: string;
-    }[];
-    avoid: { hour: number; minute: number; reason: string }[];
-  } {
-    const recommendations: Record<string, any> = {
-      health: {
-        optimal: [
-          {
-            hour: 7,
-            minute: 0,
-            confidence: 90,
-            reason: "Morning energy levels are highest",
-          },
-          {
-            hour: 18,
-            minute: 0,
-            confidence: 75,
-            reason: "Post-work stress relief",
-          },
-        ],
-        avoid: [
-          { hour: 22, minute: 0, reason: "Too close to bedtime" },
-          { hour: 13, minute: 0, reason: "Post-lunch energy dip" },
-        ],
-      },
-      mindfulness: {
-        optimal: [
-          { hour: 6, minute: 30, confidence: 95, reason: "Quiet morning mind" },
-          { hour: 21, minute: 0, confidence: 80, reason: "Evening wind-down" },
-        ],
-        avoid: [
-          { hour: 12, minute: 0, reason: "Midday distractions" },
-          { hour: 17, minute: 0, reason: "Rush hour stress" },
-        ],
-      },
-      productivity: {
-        optimal: [
-          {
-            hour: 9,
-            minute: 0,
-            confidence: 85,
-            reason: "Peak cognitive performance",
-          },
-          {
-            hour: 14,
-            minute: 30,
-            confidence: 70,
-            reason: "Afternoon focus window",
-          },
-        ],
-        avoid: [
-          { hour: 16, minute: 0, reason: "Energy crash time" },
-          { hour: 20, minute: 0, reason: "Evening fatigue" },
-        ],
-      },
-    };
-
-    return (
-      recommendations[type] || {
-        optimal: [
-          {
-            hour: 8,
-            minute: 0,
-            confidence: 70,
-            reason: "Morning routine integration",
-          },
-          {
-            hour: 19,
-            minute: 0,
-            confidence: 65,
-            reason: "Evening routine integration",
-          },
-        ],
-        avoid: [{ hour: 23, minute: 0, reason: "Too late in the day" }],
-      }
-    );
   }
 
   // Personalized Coaching
@@ -644,76 +473,6 @@ class AIInsightsService {
       `Progress, not perfection! Keep working on "${habit.title}" - you've got this! ⭐`,
     ];
     return messages[Math.floor(Math.random() * messages.length)];
-  }
-
-  // Habit Correlation Analysis
-  async analyzeHabitCorrelations(): Promise<HabitCorrelation[]> {
-    await this.initialize();
-    await dataService.initialize();
-
-    const habits = await dataService.getHabitsWithStats();
-    const correlations: HabitCorrelation[] = [];
-
-    // Simple correlation analysis (in a real app, this would use statistical correlation)
-    for (let i = 0; i < habits.length - 1; i++) {
-      for (let j = i + 1; j < habits.length; j++) {
-        const habitA = habits[i];
-        const habitB = habits[j];
-
-        // Mock correlation based on categories and completion rates
-        const correlation = this.calculateMockCorrelation(habitA, habitB);
-
-        if (Math.abs(correlation) > 0.3) {
-          correlations.push({
-            habitA: habitA.id,
-            habitB: habitB.id,
-            habitATitle: habitA.title,
-            habitBTitle: habitB.title,
-            correlation,
-            strength:
-              Math.abs(correlation) > 0.7
-                ? "strong"
-                : Math.abs(correlation) > 0.5
-                ? "moderate"
-                : "weak",
-            type: correlation > 0 ? "positive" : "negative",
-            insight: this.generateCorrelationInsight(
-              habitA,
-              habitB,
-              correlation
-            ),
-          });
-        }
-      }
-    }
-
-    return correlations.slice(0, 5); // Return top 5 correlations
-  }
-
-  private calculateMockCorrelation(
-    habitA: HabitWithStats,
-    habitB: HabitWithStats
-  ): number {
-    // Simple heuristic: similar categories and completion rates suggest positive correlation
-    const categoryMatch = habitA.type === habitB.type ? 0.4 : 0;
-    const completionSimilarity =
-      1 - Math.abs(habitA.completionRate - habitB.completionRate) / 100;
-    return (
-      Math.min(0.9, categoryMatch + completionSimilarity * 0.6) *
-      (Math.random() > 0.5 ? 1 : -1)
-    );
-  }
-
-  private generateCorrelationInsight(
-    habitA: HabitWithStats,
-    habitB: HabitWithStats,
-    correlation: number
-  ): string {
-    if (correlation > 0) {
-      return `When you succeed with "${habitA.title}", you're also more likely to complete "${habitB.title}". Consider doing them together!`;
-    } else {
-      return `There seems to be a trade-off between "${habitA.title}" and "${habitB.title}". Focus on one when the other is challenging.`;
-    }
   }
 
   // Data persistence

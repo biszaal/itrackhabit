@@ -7,7 +7,5 @@ export {
   aiInsightsService,
   type HabitRecommendation,
   type HabitInsight,
-  type PersonalizedCoaching,
-  type HabitCorrelation,
-  type OptimalTiming
+  type PersonalizedCoaching
 } from './AIInsightsService';

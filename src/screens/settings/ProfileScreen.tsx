@@ -93,7 +93,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       title: 'Insights',
       rows: [
         { icon: 'analytics', accent: t.colors.habits.sky, label: 'Analytics', onPress: () => navigation.navigate('Analytics') },
-        { icon: 'sparkle', accent: t.colors.habits.violet, label: 'AI insights', onPress: () => navigation.navigate('AIInsights') },
+        { icon: 'sparkle', accent: t.colors.habits.violet, label: 'Insights', onPress: () => navigation.navigate('AIInsights') },
         { icon: 'trophy', accent: t.colors.amber, label: 'Achievements', onPress: () => navigation.navigate('Achievements') },
       ],
     },
@@ -101,7 +101,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       title: 'Notifications',
       rows: [
         { icon: 'bell', accent: t.colors.rose, label: 'Reminders', onPress: () => navigation.navigate('NotificationSettingsNew') },
-        { icon: 'sunrise', accent: t.colors.amber, label: 'Smart notifications', onPress: () => navigation.navigate('HabitNotificationSettings') },
+        { icon: 'sunrise', accent: t.colors.amber, label: 'Smart notifications', onPress: () => navigation.navigate('HabitNotificationHabits') },
       ],
     },
     {

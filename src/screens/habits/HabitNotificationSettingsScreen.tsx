@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { enhancedNotificationService } from '../../services/notifications';
 import { dataService } from '../../services/core';
 import { useTheme } from '../../theme/ThemeContext';
@@ -11,14 +12,21 @@ const HabitNotificationSettingsScreen: React.FC = () => {
   const t = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { habitId } = route.params as { habitId: string };
+  // Reached from the habit picker, which always passes a habitId. Guarded
+  // anyway: destructuring a bare route.params threw and took the app down.
+  const habitId: string | undefined = route.params?.habitId;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [habit, setHabit] = useState<any>(null);
   const [settings, setSettings] = useState<any | null>(null);
+  const [permission, setPermission] = useState<string>('unknown');
 
   const load = useCallback(async () => {
+    if (!habitId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       await dataService.initialize();
@@ -26,6 +34,10 @@ const HabitNotificationSettingsScreen: React.FC = () => {
       const s = await enhancedNotificationService.getHabitReminderSettings(habitId);
       setHabit(habitData);
       setSettings(s);
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        setPermission(status);
+      } catch {}
     } catch {
       Alert.alert('Could not load', 'Try again later.');
     } finally {
@@ -50,12 +62,41 @@ const HabitNotificationSettingsScreen: React.FC = () => {
 
   const updateSettings = (updates: any) => setSettings({ ...settings, ...updates });
 
+  // Reminders are scheduled locally, so without permission every switch on this
+  // screen saves fine and then silently never fires.
+  const requestPermission = async () => {
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      setPermission(status);
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Enable notifications in your device settings to receive reminders.');
+      }
+    } catch {}
+  };
+
   if (loading) {
     return (
       <Screen>
         <AppHeader title="Smart notifications" back onBack={() => navigation.goBack()} />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator color={t.colors.primary} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!habitId) {
+    return (
+      <Screen>
+        <AppHeader title="Smart notifications" back onBack={() => navigation.goBack()} />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 }}>
+          <Text style={{ color: t.colors.ink2, textAlign: 'center' }}>
+            Pick a habit to set up its reminders.
+          </Text>
+          <Button
+            title="Choose a habit"
+            onPress={() => navigation.replace('HabitNotificationHabits')}
+          />
         </View>
       </Screen>
     );
@@ -96,6 +137,28 @@ const HabitNotificationSettingsScreen: React.FC = () => {
       />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: 60, gap: 14 }}>
+        {permission !== 'granted' && (
+          <Card variant="flat" padding={16} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: t.colors.bgPaper,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="notifications-off-outline" size={18} color={t.colors.amber} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>Notifications off</Text>
+              <Text style={{ color: t.colors.ink3, fontSize: 12 }}>Reminders won't fire until you enable them.</Text>
+            </View>
+            <Button title="Enable" size="sm" onPress={requestPermission} />
+          </Card>
+        )}
+
         {/* Master toggle */}
         <Card variant="elevated" padding={16} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View
@@ -139,7 +202,9 @@ const HabitNotificationSettingsScreen: React.FC = () => {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: t.colors.ink, fontSize: 14, fontWeight: '600' }}>Smart timing</Text>
-            <Text style={{ color: t.colors.ink3, fontSize: 12 }}>Learn the best time to nudge.</Text>
+            <Text style={{ color: t.colors.ink3, fontSize: 12 }}>
+              {smart ? 'Picks times from when you actually finish.' : 'Learn the best time to nudge.'}
+            </Text>
           </View>
           <Switch
             value={smart}
@@ -161,6 +226,12 @@ const HabitNotificationSettingsScreen: React.FC = () => {
         >
           Reminder times
         </Text>
+        {smart && (
+          <Text style={{ color: t.colors.ink3, fontSize: 12, marginTop: -6, lineHeight: 17 }}>
+            Smart timing is on, so these are a fallback used until there's enough
+            history to learn from.
+          </Text>
+        )}
         <Card variant="elevated" padding={0}>
           {times.length === 0 ? (
             <Text style={{ color: t.colors.ink3, fontSize: 13, padding: 16 }}>No reminders. Add one below.</Text>

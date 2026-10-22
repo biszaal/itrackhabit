@@ -31,6 +31,7 @@ export interface NotificationInsights {
   responseRate: number; // How often user acts on notifications
   bestPerformingTime: number; // Hour with highest completion rate
   streakRiskHours: number[]; // Hours when user typically misses habits
+  computedAt?: number; // Epoch ms; absent on entries cached before this existed
 }
 
 interface ScheduledNotification {
@@ -46,6 +47,10 @@ class EnhancedNotificationService {
   private readonly SETTINGS_KEY = 'enhanced_notification_settings';
   private readonly INSIGHTS_KEY = 'notification_insights';
   private readonly SCHEDULED_KEY = 'scheduled_notifications';
+  // Smart timing replaces the user's chosen reminder times, so these insights
+  // have to keep following behaviour. Cached without an expiry, they froze on
+  // whatever the first week looked like and never moved again.
+  private readonly INSIGHTS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
   
   private scheduledNotifications: ScheduledNotification[] = [];
 
@@ -118,10 +123,15 @@ class EnhancedNotificationService {
   async saveHabitReminderSettings(settings: HabitReminderSettings): Promise<void> {
     try {
       await AsyncStorage.setItem(`${this.SETTINGS_KEY}_${settings.habitId}`, JSON.stringify(settings));
+      // Changing the schedule invalidates what we learned from the old one.
+      await AsyncStorage.removeItem(`${this.INSIGHTS_KEY}_${settings.habitId}`);
       // Reschedule notifications for this habit
       await this.scheduleHabitNotifications(settings.habitId);
     } catch (error) {
+      // Swallowing this reported success to the settings screen even when
+      // nothing was written, so the caller can no longer trust a resolve.
       console.error('Failed to save habit reminder settings:', error);
+      throw error instanceof Error ? error : new Error('Failed to save habit reminder settings');
     }
   }
 
@@ -304,7 +314,13 @@ class EnhancedNotificationService {
     try {
       const stored = await AsyncStorage.getItem(`${this.INSIGHTS_KEY}_${habitId}`);
       if (stored) {
-        return JSON.parse(stored);
+        const cached: NotificationInsights = JSON.parse(stored);
+        // Entries written before computedAt existed are treated as stale, so
+        // long-frozen insights get recomputed once on upgrade.
+        const age = cached.computedAt ? Date.now() - cached.computedAt : Infinity;
+        if (age < this.INSIGHTS_TTL_MS) {
+          return cached;
+        }
       }
       
       // Calculate insights from habit completion data
@@ -347,6 +363,7 @@ class EnhancedNotificationService {
         responseRate: progress.length > 0 ? (progress.filter(p => p.status === 'done').length / progress.length) * 100 : 0,
         bestPerformingTime: optimalTimes[0] || 9,
         streakRiskHours: [22, 23], // Default late hours for streak protection
+        computedAt: Date.now(),
       };
 
       // Cache insights
