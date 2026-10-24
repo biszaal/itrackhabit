@@ -16,6 +16,7 @@ jest.mock("../src/services/core/OfflineStorage", () => ({
     getAllHabits: jest.fn().mockResolvedValue([]),
     getHabitProgressForDate: jest.fn().mockResolvedValue(null),
     getAllHabitProgress: jest.fn().mockResolvedValue([]),
+    getProgressInRange: jest.fn().mockResolvedValue([]),
     saveHabit: jest.fn().mockResolvedValue(undefined),
     saveHabitProgress: jest.fn().mockResolvedValue(undefined),
     updateHabitProgress: jest.fn().mockResolvedValue(undefined),

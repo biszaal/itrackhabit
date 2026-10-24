@@ -46,6 +46,14 @@ jobs:
         env:
           TZ: Pacific/Auckland
 
+      # The calendar walk once repeated a day across the spring clock change.
+      # That only shows in zones whose clocks sit at or just past UTC and
+      # observe DST, which none of the zones above do.
+      - name: Test (Europe/London)
+        run: npx jest --ci
+        env:
+          TZ: Europe/London
+
       # Thresholds are a ratchet pinned just under current coverage, so this
       # fails on regression rather than aspiring to a number nobody meets.
       - name: Coverage

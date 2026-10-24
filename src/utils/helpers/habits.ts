@@ -59,7 +59,7 @@ const startOfLocalDay = (value: string | Date | null | undefined): Date | null =
 
 // `new Date("2026-07-26")` parses as UTC midnight, which lands on the previous
 // day west of UTC. Day keys must be read back as local dates.
-const parseDayKey = (value: string): Date | null => {
+export const parseDayKey = (value: string): Date | null => {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (!m) return null;
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
@@ -67,7 +67,7 @@ const parseDayKey = (value: string): Date | null => {
 
 // Calendar-based rather than adding 86_400_000, so DST transitions (23- and
 // 25-hour days) don't skip or repeat a day.
-const addDays = (d: Date, n: number): Date =>
+export const addDays = (d: Date, n: number): Date =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 
 // A daily habit breaks its streak on a single missed day. Weekly and custom

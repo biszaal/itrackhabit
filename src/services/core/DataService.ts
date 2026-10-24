@@ -11,7 +11,13 @@ import { supabaseService } from "./SupabaseService";
 import { achievementService } from "../premium/AchievementService";
 import { socialService } from "../social/SocialService";
 import { featureGatingService } from "./FeatureGatingService";
-import { calculateHabitStats, HabitStats } from "../../utils/helpers/habits";
+import {
+  addDays,
+  calculateHabitStats,
+  HabitStats,
+  parseDayKey,
+} from "../../utils/helpers/habits";
+import { toLocalISODate } from "../../utils/formatting/time";
 import {
   Habit,
   HabitProgress,
@@ -719,8 +725,23 @@ class DataService {
       }
     }
 
+    // One query for every habit's history, grouped here. This used to run a
+    // full-history query per habit, on every screen that shows stats.
+    const allProgress = await offlineStorage.getAllHabitProgress(
+      this.currentUserId
+    );
+    const progressByHabit = new Map<string, HabitProgress[]>();
+    for (const entry of allProgress) {
+      const list = progressByHabit.get(entry.habitId);
+      if (list) list.push(entry);
+      else progressByHabit.set(entry.habitId, [entry]);
+    }
+
     for (const habit of habits) {
-      const stats = await this.calculateHabitStats(habit);
+      const stats = calculateHabitStats(progressByHabit.get(habit.id) ?? [], {
+        createdAt: habit.createdAt,
+        frequency: habit.frequency,
+      });
       habitsWithStats.push({
         ...habit,
         ...stats,
@@ -992,16 +1013,36 @@ class DataService {
     startDate: string,
     endDate: string
   ): Promise<DailyStats[]> {
-    // For daily stats, we need ALL habits including deleted ones to show historical data correctly
+    const start = parseDayKey(startDate);
+    const end = parseDayKey(endDate);
+    if (!start || !end) return [];
+
+    // Deleted habits still count on the days they existed, so historical
+    // charts don't change when a habit is removed.
     const habits = await this.getAllHabitsIncludingDeleted();
+
+    // One query for the whole range. This used to run one query per habit
+    // per day, which for a year of history meant thousands of round trips.
+    const progress = await offlineStorage.getProgressInRange(
+      this.currentUserId,
+      startDate,
+      endDate
+    );
+    const doneByDate = new Map<string, Set<string>>();
+    for (const entry of progress) {
+      if (entry.status !== "done") continue;
+      const done = doneByDate.get(entry.date) ?? new Set<string>();
+      done.add(entry.habitId);
+      doneByDate.set(entry.date, done);
+    }
+
     const dailyStats: DailyStats[] = [];
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const currentDate = new Date(start);
-
-    while (currentDate <= end) {
-      const dateString = currentDate.toISOString().split("T")[0];
+    // Walk local calendar days. Walking UTC midnights repeated a day and
+    // dropped the last one whenever a range crossed a spring clock change
+    // in a zone at or just east of UTC (e.g. the UK).
+    for (let day = start; day <= end; day = addDays(day, 1)) {
+      const dateString = toLocalISODate(day);
+      const done = doneByDate.get(dateString);
 
       let completedHabits = 0;
       let totalActiveHabits = 0;
@@ -1015,37 +1056,24 @@ class DataService {
           ? habit.deletedAt.split("T")[0]
           : null;
 
-        // Only count habit if it existed on this date
         const wasActive =
           dateString >= habitCreatedDate &&
           (!habitDeletedDate || dateString <= habitDeletedDate);
+        if (!wasActive) continue;
 
-        if (wasActive) {
-          totalActiveHabits++;
-
-          const progress = await this.getHabitProgressForDate(
-            habit.id,
-            dateString
-          );
-          if (progress && progress.status === "done") {
-            completedHabits++;
-          }
-        }
+        totalActiveHabits++;
+        if (done?.has(habit.id)) completedHabits++;
       }
-
-      const completionRate =
-        totalActiveHabits > 0
-          ? Math.round((completedHabits / totalActiveHabits) * 100)
-          : 0;
 
       dailyStats.push({
         date: dateString,
         totalHabits: totalActiveHabits,
         completedHabits,
-        completionRate,
+        completionRate:
+          totalActiveHabits > 0
+            ? Math.round((completedHabits / totalActiveHabits) * 100)
+            : 0,
       });
-
-      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return dailyStats;
