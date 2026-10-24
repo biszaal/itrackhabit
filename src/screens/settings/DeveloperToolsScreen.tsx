@@ -13,6 +13,7 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [crash, setCrash] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -75,6 +76,10 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
     ]);
   };
 
+  // Throwing during render is what the crash screen catches; an error in an
+  // event handler would not reach it.
+  if (crash) throw new Error('Test crash from Developer tools');
+
   return (
     <Screen>
       <AppHeader title="Developer tools" subtitle="For testing only." back onBack={() => navigation.goBack()} />
@@ -111,6 +116,7 @@ export const DeveloperToolsScreen: React.FC<DeveloperToolsScreenProps> = ({ navi
         <View style={{ marginTop: 14, gap: 10 }}>
           <Button title="Add demo data" loading={loading} onPress={handleCreate} fullWidth />
           <Button title="Remove demo data" variant="ghost" textStyle={{ color: t.colors.danger }} fullWidth onPress={handleRemove} />
+          <Button title="Throw test error" variant="ghost" fullWidth onPress={() => setCrash(true)} />
         </View>
 
         <Text style={{ color: t.colors.ink4, fontSize: 11, marginTop: 22, textAlign: 'center' }}>
