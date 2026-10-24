@@ -24,6 +24,7 @@ export type RootStackParamList = {
   DataManagement: undefined;
   PrivacySecurity: undefined;
   DeveloperTools: undefined;
+  Feedback: undefined;
 };
 
 export type MainTabParamList = {

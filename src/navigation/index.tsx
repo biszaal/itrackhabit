@@ -29,6 +29,7 @@ import OnboardingScreen from '../screens/auth/OnboardingScreen';
 import { DataManagement } from '../screens/settings/DataManagement';
 import { PrivacySecurity } from '../screens/settings/PrivacySecurity';
 import DeveloperToolsScreen from '../screens/settings/DeveloperToolsScreen';
+import { FeedbackScreen } from '../screens/settings/FeedbackScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -235,6 +236,14 @@ export function RootNavigator() {
           component={PrivacySecurity}
           options={{
             title: 'Privacy & Security',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="Feedback"
+          component={FeedbackScreen}
+          options={{
+            title: 'Send feedback',
             headerShown: false,
           }}
         />

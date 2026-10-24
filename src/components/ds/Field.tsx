@@ -39,14 +39,16 @@ export const Field: React.FC<Props> = ({
       )}
       <View
         style={{
-          height: 52,
+          // A multiline field grows with its text instead of clipping to one row.
+          ...(rest.multiline
+            ? { minHeight: 132, paddingVertical: 14, alignItems: 'flex-start' as const }
+            : { height: 52, alignItems: 'center' as const }),
           borderRadius: t.radius.input,
           backgroundColor: focused ? t.colors.bgElev : t.colors.bgPaper,
           borderWidth: 1,
           borderColor: focused ? t.colors.primary : 'transparent',
           paddingHorizontal: 16,
           flexDirection: 'row',
-          alignItems: 'center',
           gap: 10,
         }}
       >
@@ -68,6 +70,7 @@ export const Field: React.FC<Props> = ({
               color: t.colors.ink,
               fontSize: 16,
               padding: 0,
+              textAlignVertical: rest.multiline ? 'top' : 'center',
             },
             style,
           ]}

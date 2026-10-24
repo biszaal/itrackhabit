@@ -7,6 +7,7 @@ import { MainTabScreenProps } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { dataService } from '../../services/core';
+import { reviewPromptService } from '../../services/feedback/ReviewPromptService';
 import { Screen, AppHeader, Card, Button, Stat, useTabBarHeight } from '../../components/ds';
 import { Glyph, GlyphName, mix } from '../../components/art';
 
@@ -114,6 +115,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     {
       title: 'Support',
       rows: [
+        { icon: 'chat', accent: t.colors.primary, label: 'Send feedback', onPress: () => navigation.navigate('Feedback') },
+        {
+          icon: 'medal',
+          accent: t.colors.amber,
+          label: 'Rate iTrackHabit',
+          onPress: () => {
+            reviewPromptService.openStorePage().catch(() => {
+              Alert.alert('Could not open the store', 'Please try again later.');
+            });
+          },
+        },
         { icon: 'device', accent: t.colors.slate, label: 'About iTrackHabit', detail: appVersion },
         // Debug-only: creates and deletes mock users, never ship this to users.
         ...(__DEV__
