@@ -2,7 +2,7 @@
   "expo": {
     "name": "iTrackHabit",
     "slug": "itrackhabit",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "platforms": [
       "ios",
       "android",
@@ -11,7 +11,7 @@
     "description": "Track your habits and build better routines with iTrackHabit. A beautiful, offline-first habit tracker with neumorphic design.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",

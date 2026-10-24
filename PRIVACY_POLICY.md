@@ -1,6 +1,6 @@
 # Privacy Policy for iTrackHabit
 
-**Last updated: August 10, 2026**
+**Last updated: October 24, 2026**
 
 The published, canonical version of this policy — the one linked from the App
 Store and Google Play listings and from Profile → Privacy & security in the
@@ -19,13 +19,15 @@ where it lives, and what rights you have over it.
 
 The short version: iTrackHabit works entirely on your device. There is no
 account to create, no server to sign in to, and nothing about your habits is
-sent to us.
+sent to us. The only thing that ever leaves your device is feedback you choose
+to send us from the app.
 
 ## Information We Collect
 
-**We do not collect any personal information.** iTrackHabit has no user
-accounts, and we operate no server that receives your data. We cannot see your
-habits, your progress, or anything else you enter into the app.
+**We collect nothing automatically.** iTrackHabit has no user accounts, and
+your habits, progress, and everything else you enter stay on your device. The
+only information that reaches us is feedback you choose to send — see
+"Feedback You Send" below.
 
 ### What the app stores on your device
 
@@ -42,7 +44,8 @@ other apps cannot read. It is never transmitted to us or to anyone else.
 
 - No name, email address, phone number, or contacts
 - No location data
-- No advertising identifiers or device identifiers
+- No advertising identifiers or device identifiers (feedback carries only a
+  random ID the app makes up, described below)
 - No usage analytics, crash telemetry, or behavioural tracking
 - No health or fitness data from Apple Health or Google Fit
 
@@ -54,6 +57,26 @@ awarding achievements, and generating the insights and suggestions you see in
 the app. Those insights are calculated locally from your own records — nothing
 is sent anywhere to be analysed, and no artificial-intelligence service outside
 your device is involved.
+
+## Feedback You Send
+
+Profile → Send feedback, and the "Send error report" button on the screen the
+app shows if it ever crashes, let you send us a message. Nothing is sent until
+you tap Send, and the screen shows what will go. A message contains:
+
+- The category you picked and the text you wrote
+- Your email address, only if you type one in so we can reply
+- Device details, unless you switch them off: app version, iOS or Android
+  version, and device model
+- A random ID that the app generates on your device. It is not linked to you,
+  your device's hardware, or any account; we use it only to stop one device
+  flooding us with messages
+- For error reports, the technical error text the screen showed you
+
+Feedback is stored by Supabase, our database provider, in its Tokyo, Japan
+data centre (Amazon Web Services, ap-northeast-1), and read only by us. We
+delete each message 24 months after it arrives. To have a message deleted
+sooner, email us with the date you sent it and roughly what it said.
 
 ## Reminders and Notifications
 
@@ -85,7 +108,9 @@ privacy practices, not this policy. We never receive a copy.
 
 iTrackHabit contains no advertising, no analytics or tracking SDKs, no
 social-media integrations, and no in-app purchases. We do not sell, rent, or
-share your information with anyone, because we do not have it.
+share your information with anyone. The only service that handles anything
+from the app is Supabase, which stores the feedback you choose to send on our
+behalf.
 
 The app is distributed through the Apple App Store and Google Play. Those stores
 handle your download, and they collect their own information about installs and
@@ -105,18 +130,20 @@ can delete individual habits and their history inside the app, or erase
 everything from Profile → Export & backup. Uninstalling iTrackHabit removes its
 local database along with it.
 
-Because we hold no copy of your data, there is nothing for us to delete on our
-side and nothing we could restore for you — so export a backup first if you want
-to keep your history.
+Apart from feedback you send, we hold no copy of your data, so there is
+nothing for us to delete on our side and nothing we could restore for you —
+export a backup first if you want to keep your history.
 
 ## Children's Privacy
 
-iTrackHabit does not knowingly collect personal information from children, or
-from any other user, regardless of age. The app is not directed to children
-under 13, and it contains no advertising, no chat, and no other features that
-would gather information about a child. If we introduce any data collection in
-the future, we will take appropriate steps to comply with applicable children's
-privacy laws, including COPPA and UK data protection requirements.
+iTrackHabit does not knowingly collect personal information from children.
+Apart from feedback a user chooses to send, it collects nothing from anyone,
+regardless of age. The app is not directed to children under 13, and it
+contains no advertising, no chat, and no other features that would gather
+information about a child. If we learn that a child under 13 has sent us
+feedback containing personal information, we will delete it. We will take
+appropriate steps to comply with applicable children's privacy laws, including
+COPPA and UK data protection requirements.
 
 ## Data Security
 
@@ -132,7 +159,7 @@ Under UK and EU data protection law you have the right to access, correct,
 delete, and port your personal data, and to object to its processing. In
 iTrackHabit you can exercise all of these directly: your data is visible in the
 app, editable at any time, deletable by you, and exportable to a file you own.
-We hold no personal data about you, so there is no request you need to send us
+Apart from any feedback you have sent, we hold no personal data about you, so there is no request you need to send us
 in order to do any of it — but if you have a question or a complaint, contact us
 using the details below.
 
