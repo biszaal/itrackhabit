@@ -9,7 +9,7 @@ import { badgeService } from "../premium/BadgeService";
 import { apiService } from "./ApiService";
 import { supabaseService } from "./SupabaseService";
 import { achievementService } from "../premium/AchievementService";
-import { socialService } from "../social/SocialService";
+import { reviewPromptService } from "../feedback/ReviewPromptService";
 import { featureGatingService } from "./FeatureGatingService";
 import {
   addDays,
@@ -41,6 +41,7 @@ class DataService {
   private syncInProgress = false;
   private currentUserId: string = "offline_user";
   private syncInterval: any = null;
+  private afterCompletionChain: Promise<void> = Promise.resolve();
 
   /**
    * Idempotent, concurrency-safe initialization.
@@ -916,21 +917,11 @@ class DataService {
       await offlineStorage.saveHabitProgress(progress);
     }
 
-    // Check for new achievements when habit is completed
+    // Achievements and the rating prompt used to run here, awaited, so every
+    // tap waited on them. The social-feed write that sat alongside belonged
+    // to a feature that no longer exists and is gone.
     if (progress.status === "done") {
-      try {
-        await achievementService.initialize();
-        await achievementService.checkForNewAchievements();
-
-        // Track social activity for habit completion
-        const habit = await offlineStorage.getHabit(habitId);
-        if (habit) {
-          await socialService.initialize();
-          await socialService.trackHabitCompletion(habitId, habit.title);
-        }
-      } catch (error) {
-        console.error("Achievement check or social tracking failed:", error);
-      }
+      this.queueAfterCompletion(habitId);
     }
 
     // Handle real-time challenge updates
@@ -951,6 +942,40 @@ class DataService {
     }
 
     return progress;
+  }
+
+  /**
+   * Runs post-completion work in the background, one job at a time, so
+   * overlapping taps never race each other for the same achievement or
+   * rating prompt.
+   */
+  private queueAfterCompletion(habitId: string): void {
+    this.afterCompletionChain = this.afterCompletionChain.then(() =>
+      this.runAfterCompletion(habitId)
+    );
+  }
+
+  private async runAfterCompletion(habitId: string): Promise<void> {
+    try {
+      await achievementService.initialize();
+      await achievementService.checkForNewAchievements();
+    } catch (error) {
+      console.error("Achievement check failed:", error);
+    }
+
+    try {
+      const habit = await offlineStorage.getHabit(habitId);
+      if (!habit) return;
+      const stats = await this.calculateHabitStats(habit);
+      await reviewPromptService.maybePrompt(stats);
+    } catch (error) {
+      console.error("Review prompt check failed:", error);
+    }
+  }
+
+  /** Resolves once queued after-completion work has finished. */
+  afterCompletionIdle(): Promise<void> {
+    return this.afterCompletionChain;
   }
 
   private async syncProgressWithRealTimeUpdate(
