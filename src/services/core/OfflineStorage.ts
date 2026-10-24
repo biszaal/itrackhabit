@@ -4,6 +4,21 @@
 import * as SQLite from "expo-sqlite";
 import { v4 as uuidv4 } from "uuid";
 import { Habit, HabitProgress, User } from "../../types";
+import { LOCAL_ONLY } from "../../config/runtime";
+
+const SYNC_QUEUE_PURGED_KEY = "sync_queue_purged_v1";
+
+// A malformed JSON column used to throw out of the row mapper and take the
+// whole habit list down with it. Now only that one field is lost.
+function safeParse<T>(raw: string | null | undefined, column: string): T | undefined {
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    console.error(`Ignoring malformed JSON in ${column}:`, error);
+    return undefined;
+  }
+}
 
 interface SyncQueueItem {
   id: string;
@@ -45,6 +60,7 @@ class OfflineStorageService {
 
       // Check and fix schema issues
       await this.checkAndFixSchema();
+      await this.purgeSyncQueueOnce();
 
       this.isInitialized = true;
       console.log("🎉 Offline storage initialized successfully");
@@ -53,6 +69,20 @@ class OfflineStorageService {
       this.db = null;
       this.isInitialized = false;
       throw error;
+    }
+  }
+
+  // v1 is offline-only, so nothing ever drains the sync queue; every
+  // check-in used to add rows to it forever. Rows written by earlier builds
+  // are cleared once.
+  private async purgeSyncQueueOnce(): Promise<void> {
+    if (!LOCAL_ONLY || !this.db) return;
+    try {
+      if ((await this.getMetadata(SYNC_QUEUE_PURGED_KEY)) === "true") return;
+      await this.db.runAsync(`DELETE FROM sync_queue`);
+      await this.setMetadata(SYNC_QUEUE_PURGED_KEY, "true");
+    } catch (error) {
+      console.warn("Could not clear the unused sync queue:", error);
     }
   }
 
@@ -276,6 +306,12 @@ class OfflineStorageService {
         UNIQUE(habitId, date)
       );
     `);
+
+    // Range reads (calendar, analytics, achievements) filter on date alone,
+    // which the (habitId, date) unique index cannot serve.
+    await this.db.execAsync(
+      `CREATE INDEX IF NOT EXISTS idx_progress_date ON habit_progress (date);`
+    );
 
     console.log("🔄 Creating sync_queue table...");
     // Sync Queue table
@@ -559,8 +595,8 @@ class OfflineStorageService {
       frequency: row.frequency,
       isShared: row.isShared === 1,
       type: row.type || "manual",
-      healthConfig: row.healthConfig ? JSON.parse(row.healthConfig) : undefined,
-      targetConfig: row.targetConfig ? JSON.parse(row.targetConfig) : undefined,
+      healthConfig: safeParse(row.healthConfig, "habits.healthConfig"),
+      targetConfig: safeParse(row.targetConfig, "habits.targetConfig"),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       deletedAt: row.deletedAt,
@@ -568,7 +604,7 @@ class OfflineStorageService {
       serverId: row.serverId,
       color: row.color,
       emoji: row.emoji ?? undefined,
-      microSteps: row.microSteps ? JSON.parse(row.microSteps) : undefined,
+      microSteps: safeParse(row.microSteps, "habits.microSteps"),
     } as any;
   }
 
@@ -661,6 +697,8 @@ class OfflineStorageService {
     table: "habits" | "progress" | "users",
     data: any
   ): Promise<void> {
+    // Offline-only builds have no server to sync to; see purgeSyncQueueOnce.
+    if (LOCAL_ONLY) return;
     if (!this.db) throw new Error("Database not initialized");
 
     const queueItem: SyncQueueItem = {
@@ -839,6 +877,23 @@ class OfflineStorageService {
     return result ? this.mapRowToHabitProgress(result as any) : null;
   }
 
+  // One query for a whole date range. Callers used to ask per habit per
+  // day, which for a year of history meant thousands of round trips.
+  async getProgressInRange(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<HabitProgress[]> {
+    if (!this.db) throw new Error("Database not initialized");
+    const result = await this.db.getAllAsync(
+      `SELECT hp.* FROM habit_progress hp
+       JOIN habits h ON hp.habitId = h.id
+       WHERE h.userId = ? AND hp.date BETWEEN ? AND ?`,
+      [userId, startDate, endDate]
+    );
+    return result.map((row) => this.mapRowToHabitProgress(row as any));
+  }
+
   private mapRowToHabitProgress(row: any): HabitProgress {
     return {
       id: row.id,
@@ -849,9 +904,7 @@ class OfflineStorageService {
       targetValue: row.targetValue,
       unit: row.unit,
       notes: row.notes,
-      microStepsDone: row.microStepsDone
-        ? JSON.parse(row.microStepsDone)
-        : undefined,
+      microStepsDone: safeParse(row.microStepsDone, "habit_progress.microStepsDone"),
       updatedAt: row.updatedAt,
       pending: row.pending === 1,
     };
