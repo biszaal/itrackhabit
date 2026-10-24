@@ -58,6 +58,8 @@ export const useAnalytics = (periodDays: number = 30) => {
   }, []);
 
   const loadAnalytics = useCallback(async () => {
+    // Dev-only timing, read from the device log to compare builds.
+    const startedAt = Date.now();
     try {
       setError(null);
       await dataService.initialize();
@@ -87,7 +89,8 @@ export const useAnalytics = (periodDays: number = 30) => {
         habitStats: activeHabits,
         categoryDistribution
       });
-      
+      if (__DEV__) console.log(`[perf] analytics load ${Date.now() - startedAt}ms`);
+
     } catch (error) {
       console.error('Failed to load analytics:', error);
       setError('Failed to load analytics data. Please try again.');

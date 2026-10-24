@@ -201,7 +201,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }));
 
     try {
+      const tapAt = Date.now();
       const saved = await dataService.markHabitProgress(habit.id, selectedISO, newStatus);
+      // Dev-only timing, read from the device log to compare builds.
+      if (__DEV__) console.log(`[perf] check-in saved ${Date.now() - tapAt}ms`);
       setDayProgress((prev) => ({ ...prev, [habit.id]: saved }));
       // A finished habit should not leave a session ticking behind it — the
       // timer screen does the same on its own Complete button.
