@@ -146,15 +146,15 @@ The fallback shows:
 In `DataService.markHabitProgress`:
 
 - Remove the `socialService.trackHabitCompletion` call. It belongs to the removed social feature and reloads every habit's full history on each tap. During implementation, confirm that nothing reads the activity feed it writes to.
-- The achievement check and the review-prompt check run **after** the method returns, without being awaited. They are serialised: if a check is already running, the new request sets a flag and one more check runs afterwards.
-- Target: with 10 habits and a year of history, a tap updates the UI in under 100 ms on the Samsung SM-S948B.
+- The achievement check and the review-prompt check run **after** the method returns, without being awaited. They are serialised by chaining each job onto the previous one, so overlapping taps run one after another and never race.
+- Target: with the demo data set (see Testing), a check-in saves in under 100 ms on the Samsung SM-S948B.
 
 ### 4.3 Stats use one query instead of thousands
 
 `OfflineStorage` gets:
 
-- `getAllProgress()`: one query for all progress rows.
-- `getProgressInRange(startDate, endDate)`: one query with `date BETWEEN ? AND ?`.
+- The existing `getAllHabitProgress(userId)` is reused: it is already one query for all progress rows.
+- `getProgressInRange(userId, startDate, endDate)`: one query with `date BETWEEN ? AND ?`.
 - A new index: `CREATE INDEX IF NOT EXISTS idx_progress_date ON habit_progress(date)`.
 
 `DataService.getHabitsWithStats` loads all progress once, groups it by `habitId` in memory, and calls the existing pure `calculateHabitStats` for each habit.
@@ -166,7 +166,7 @@ In `DataService.markHabitProgress`:
 - Walks the days with local-date arithmetic: start and end are parsed into year, month and day, then `new Date(y, m, d + i)` is formatted with `toLocalISODate`.
 - The "was this habit active on this date" rule is unchanged.
 
-Target: the Analytics tab loads in under 300 ms with 10 habits and 365 days of history on the Samsung. Measure before and after.
+Target: with the demo data set (see Testing), the Analytics tab loads in under 300 ms on the Samsung. Measure before and after.
 
 ### 4.4 Daylight-saving bug
 
@@ -250,7 +250,7 @@ The uncommitted notification and insights changes already in `frontend/` must pa
 - Send in airplane mode; the "Saved" state shows; after reconnecting and foregrounding the app, the row arrives.
 - "Throw test error" shows the crash screen; Export and Send report both work; "Try again" recovers.
 - The System theme follows the OS dark-mode toggle.
-- Seed a year of data for 10 habits, then record Analytics load time and check-in latency, before and after.
+- Seed data with Developer tools → Add demo data (6 habits, about four months of history), then record Analytics load time and check-in latency, before and after, from dev-only `[perf]` log lines. The performance targets in 4.2 and 4.3 are judged on this data set, in a dev build.
 
 ## Out of scope (separate specs, in this order)
 
