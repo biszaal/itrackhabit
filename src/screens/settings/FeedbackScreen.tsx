@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Switch } from 'react-native';
+import { View, Text, ScrollView, Switch, KeyboardAvoidingView, Platform } from 'react-native';
 import { RootStackScreenProps } from '../../types/navigation';
 import { useTheme } from '../../theme/ThemeContext';
 import { Screen, AppHeader, Card, Chip, Field, Button } from '../../components/ds';
@@ -80,6 +80,9 @@ export const FeedbackScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <Screen>
       <AppHeader title="Send feedback" back onBack={() => navigation.goBack()} />
+      {/* Same as the other forms: without this the iOS keyboard covers the
+          email field and the Send button. */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: t.spacing.screen, paddingBottom: 48, gap: 18 }}
@@ -150,6 +153,7 @@ export const FeedbackScreen: React.FC<Props> = ({ navigation }) => {
 
         <Button title="Send feedback" onPress={send} disabled={!canSend} loading={sending} fullWidth />
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 };

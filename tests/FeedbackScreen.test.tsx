@@ -1,4 +1,5 @@
 import React from "react";
+import { KeyboardAvoidingView, Platform } from "react-native";
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FeedbackScreen } from "../src/screens/settings/FeedbackScreen";
@@ -114,6 +115,14 @@ describe("FeedbackScreen", () => {
     fillIn(screen);
     fireEvent.press(sendButton(screen));
     await screen.findByText("Thanks for all the feedback today! This one will send tomorrow.");
+  });
+
+  // The email field and Send button sit low on the screen; on iOS the
+  // keyboard would cover them, as it would on every other form here.
+  it("keeps the form above the iOS keyboard", () => {
+    const screen = renderScreen();
+    const avoider = screen.UNSAFE_getByType(KeyboardAvoidingView);
+    expect(avoider.props.behavior).toBe(Platform.OS === "ios" ? "padding" : undefined);
   });
 
   it("shows the server's reason when the message is rejected, and keeps the text", async () => {
