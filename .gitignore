@@ -26,3 +26,6 @@ store/
 # Raw simulator captures for store screenshots (intermediates; the framed
 # results in store/apple/screenshot/ are what ship)
 scripts/store-screenshots/captures/
+
+# Google Play service account key for eas submit (secret)
+google-service-account-key.json
