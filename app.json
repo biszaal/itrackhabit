@@ -67,6 +67,7 @@
       ],
       "./plugins/withFmtConstevalFix",
       "./plugins/withPodMinDeploymentTarget",
+      "./plugins/withPortraitFeatureOptional",
       [
         "expo-build-properties",
         {
